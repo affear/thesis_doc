@@ -1,14 +1,25 @@
 \section{Introduction}
 \label{sec:sota_intro}
+At the beginning of the development of the thesis we were mainly focused on the implementation of a module for OpenStack that would allow to implement different consolidation algorithms and test them to see their real impact on a cloud system in terms of resource allocation. During the first phases we faced with the problem of running, testing and benchmarking our code in an OpenStack environment: to deal with aspects like scheduling, VM placement, and consolidation we needed an highly configurable system that would allow us to run simulations and benchmark to evaluate the goodness of our solution. We wanted it to be fully customizable to match different requirements and let the user customize a lot of aspect such as the structure of the environments, the number of compute nodes (the nodes that host the Virtual Machines), their fake characteristics or the OpenStack services to run. Secondly we needed a way to automatically simulate, in a repeatable way, the workload generated from user applications that normally run on an OpenStack installation. At last we realized that it would be very useful to show the real time data of the simulations to analyze the behavior of the system in different configurations.
+Therefore we decided to develop aDock®, a suite of tools for creating performant, sandboxed, and configurable cloud infrastructure experimentation environments that developer, sysadmins and researchers can exploit to access a fully functional cloud installation of OpenStack.
+For that reason this chapter is divided into two sections that describe the state of the arts of Virtual Machine consolidation and of Cloud test environments.
 
 \section{Virtual Machine consolidation}
 \label{sec:sota_vm_cons}
+In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
+To reduce the impact of these complications are available some tools that make the process of setting up a cloud infrastructure experimentation environment more easy and manageable.
+The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the goal of running the desired sandboxed environment on limited hardware resources the three solution are used together with two core technologies for the cloud world, Vagrant and Containers (Docker), both outlined below.
 
 \section{Cloud test environments}
 \label{sec:sota_test_env}
 
 \subsection{Vagrant}
 \label{sub:sota_vagrant}
+Vagrant is a software, written in Ruby, that allows to create configure and manage virtual development environments. It is a wrapper around virtualization software such as VirtualBox, KVM, VMware and could be used together with configuration management software such as Chef and Puppet.
+One of its major benefits is that, given a Vagrantfile, is simple as run a command to have a full pre-configured development environment:
+“Vagrant up”
+In addition there is a big collection of Vagrantfile available online and free to download.
+
 
 \subsection{Chef}
 \label{sub:sota_chef}
