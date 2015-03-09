@@ -1,3 +1,9 @@
+%!TEX root = ../thesis.tex
+%%--------------------------------------------------------------------------
+%% STATE OF THE ARTS
+%%--------------------------------------------------------------------------
+
+
 \section{Introduction}
 \label{sec:sota_intro}
 At the beginning of the development of the thesis we were mainly focused on the implementation of a module for OpenStack that would allow to implement different consolidation algorithms and test them to see their real impact on a cloud system in terms of resource allocation. During the first phases we faced with the problem of running, testing and benchmarking our code in an OpenStack environment: to deal with aspects like scheduling, VM placement, and consolidation we needed an highly configurable system that would allow us to run simulations and benchmark to evaluate the goodness of our solution. We wanted it to be fully customizable to match different requirements and let the user customize a lot of aspect such as the structure of the environments, the number of compute nodes (the nodes that host the Virtual Machines), their fake characteristics or the OpenStack services to run. Secondly we needed a way to automatically simulate, in a repeatable way, the workload generated from user applications that normally run on an OpenStack installation. At last we realized that it would be very useful to show the real time data of the simulations to analyze the behavior of the system in different configurations.
@@ -6,7 +12,7 @@ For that reason this chapter is divided into two sections that describe the stat
 
 \section{Virtual Machine consolidation}
 \label{sec:sota_vm_cons}
-In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
+In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins \note{(Find a better way to say it)} like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
 To reduce the impact of these complications are available some tools that make the process of setting up a cloud infrastructure experimentation environment more easy and manageable.
 The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the goal of running the desired sandboxed environment on limited hardware resources the three solution are used together with two core technologies for the cloud world, Vagrant and Containers (Docker), both outlined below.
 
@@ -15,21 +21,88 @@ The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the g
 
 \subsection{Vagrant}
 \label{sub:sota_vagrant}
-Vagrant is a software, written in Ruby, that allows to create configure and manage virtual development environments. It is a wrapper around virtualization software such as VirtualBox, KVM, VMware and could be used together with configuration management software such as Chef and Puppet.
-One of its major benefits is that, given a Vagrantfile, is simple as run a command to have a full pre-configured development environment:
-“Vagrant up”
-In addition there is a big collection of Vagrantfile available online and free to download.
+Vagrant\footnote{\url{www.vagrantup.com}} is a virtualization framework for creating, configuring and managing development environments, written in Ruby, that allows to  virtual development environments. It is a wrapper around virtualization software such as VirtualBox, KVM, VMware and could be used together with configuration management tools such as Chef and Puppet.
+Thanks to an online repository \footnote{\url{www.vagrantcloud.com}} it is possible to automatically download a Vagrant Box and run it with a single command: \code{vagrant up vagrant-box-name}.
+It is also possible to create and configure custom Vagrant Box by simply writing a Vagrantfile:
+\begin{lstlisting}[language=Ruby]
+box      = 'trusty64'
+url      = 'http://files.vagrantup.com/precise32.box'
+hostname = 'customtrustybox'
+domain   = 'example.com'
+ip       = '192.168.0.42'
+ram      = '2048'
 
+Vagrant::Config.run do |config|
+  config.vm.box = box
+  config.vm.box_url = url
+  config.vm.host_name = hostname + '.' + domain
+  config.vm.network :hostonly, ip
+
+  config.vm.customize [
+    'modifyvm', :id,
+    '--name', hostname,
+    '--memory', ram
+  ]
+end
+\end{lstlisting}
+Provisioners in Vagrant allows to automatically install and configure software in a Vagrant Box as part of the ``vagrant up'' process, therefore you can start with a base Vagrant Box, adapt it to your needs and eventually share it with other developers who can reproduce the same virtual development environment.
+Vagrant in combination with configuration management software such as Chef and Puppet is used to create repeatable and easy to setup development and test environments that rely on Virtual Machines.
 
 \subsection{Chef}
 \label{sub:sota_chef}
 
+\subparagraph{Description}
+\label{subp:sota_chef_desc}
+
+Chef\footnote{\url{www.chef.io}} is a configuration management tool used to streamline the task of configuring and maintaining servers in a cloud environment and can be integrated with cloud-based platforms such as Rackspace, Amazon EC2, Google Cloud Platform, OpenStack and others. It is written in Ruby and Erlang and uses a domain-specific language (DSL)\footnote{A programming language specialized to a particular application domain.} for writing configuration files called ``recipes''. ``Recipes'' are used to define in a declarative way the state of certain resources and define everything that is required to configure different parts of the system: they can contain the definition of software that should be installed and all the required dependencies, services that should be running or files that should be written. Given a ``recipe'' Chef ensures that all the software is installed in the right order and that each resource state is reached, eventually correcting those resources in a undesired state; ``recipes'' can be collected into ``coobooks'' to be more maintainable and powerful.\\
+A base installation of Chef is composed by three main components, a \code{chef-server} that orchestrates all the Chef processes, multiple \code{chef-client} found on all the servers, and the user workstation that communicates with the Chef Server to launch commands.\\
+To simplify the communication with the \code{chef-server} Chef provides a command-line tool called Knife that helps users to manage nodes, ``cookbook'' and ``recipes'', and the majority of possible operations.
+
+\subparagraph{Chef and OpenStack}
+\label{subp:sota_chef_openstack}
+
+Chef and OpenStack can be combined and used together in different ways, many of which have a different goal compared to our thesis. Is it possible in fact to deploy and manage a production OpenStack installation running on multiple servers and supervised by a Chef Server using the subcommand \code{knife openstack} to control the OpenStack APIs through Chef and thus instantiate new physical servers with a chef-client installed or turn them off (\code{knife openstack server create / delete}).
+In this situation you can achieve a ``1 + N'' configuration that is one OpenStack Controller and N OpenStack Nodes, and the OpenStack services are predefined and you cannot configure an ad hoc configuration.
+Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services (both of Controller and Compute) are installed on a single node.\\
+These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a Vagrantfile that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
+\begin{lstlisting}[language=Ruby]
+machine 'controller' do
+  add_machine_options vagrant_config: controller_config
+  role 'allinone-compute'
+  role 'os-image-upload'
+
+  chef_environment 'vagrant-aio-nova'
+  file('/etc/chef/openstack_data_bag_secret',
+       "#{File.dirname(__FILE__)}/.chef/encrypted_data_bag_secret")
+  converge true
+\end{lstlisting}
+
+Of course it is possible to setup a ``1 + N'' configuration using different Vagrantfile to create and configure one VM to host the Controller and N VMs to host the Compute nodes. However it is unlikely to succeed in running a lot of VMs on the same host especially if they will contain a fully functional OpenStack installation as a Virtual Machine typically require a significant amount of resources to operate.
+
+\note{\dots  Insert timing to install OpenStack with Chef\dots}
+
+\subparagraph{Pro and Cons}
+\label{subp:sota_chef_pro_cons}
+
+Chef, as seen, is therefore a very powerful tool to create, manage and configure cloud environments and offers a lot of functionalities to structure the desired architecture. In combination with Vagrant is also useful to setup test environments for development or research purposes.\\
+However, with regard to this last aspect, it has several limitations:
+\begin{itemize}
+\item \textit{Heaviness}: due the greed of resources of a Virtual Machine is very difficult to achieve a ``1 + N'' configuration for development or research purpose on a single machine. On the other hand the ``All-in-One Compute'' solution that allows a full OpenStack on a single Virtual Machine is very simplistic and doesn't represent a real environment setting as it runs all the OpenStack services on a single node.
+\item \textit{Lack of customization}: at the state of the art all of the described solutions install both the Controller node and the Compute node with a predefined set of installed service (in particular are installed all the OpenStack service excluded Object Storage, Metering, and Orchestration) so it is not possible to setup the environment with more or less services or new ones (as in our case).
+\item \note{think others\dots}
+\end{itemize}
+
 \subsection{Puppet}
 \label{sub:sota_puppet}
+
+\subparagraph{Description}
+\label{subp:sota_puppet_desc}
+
+Similarly to Chef (described in section~\ref{sub:sota_chef}) 
 
 \subsection{Docker}
 \label{sub:sota_docker}
 
-\subsection{Dockenstack}
+\subsection{Dockentack}
 \label{sub:sota_dockenstack}
 
