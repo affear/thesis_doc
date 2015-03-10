@@ -54,7 +54,7 @@ Vagrant in combination with configuration management software such as Chef and P
 \subparagraph{Description}
 \label{subp:sota_chef_desc}
 
-Chef\footnote{\url{www.chef.io}} is a configuration management tool used to streamline the task of configuring and maintaining servers in a cloud environment and can be integrated with cloud-based platforms such as Rackspace, Amazon EC2, Google Cloud Platform, OpenStack and others. It is written in Ruby and Erlang and uses a domain-specific language (DSL)\footnote{A programming language specialized to a particular application domain.} for writing configuration files called ``recipes''. ``Recipes'' are used to define in a declarative way the state of certain resources and define everything that is required to configure different parts of the system: they can contain the definition of software that should be installed and all the required dependencies, services that should be running or files that should be written. Given a ``recipe'' Chef ensures that all the software is installed in the right order and that each resource state is reached, eventually correcting those resources in a undesired state; ``recipes'' can be collected into ``coobooks'' to be more maintainable and powerful.\\
+Chef\footnote{\url{www.chef.io}} is a configuration management tool used to streamline the task of configuring and maintaining servers in a cloud environment and can be integrated with cloud-based platforms such as Rackspace, Amazon EC2, Google Cloud Platform, OpenStack and others. It is written in Ruby and Erlang and uses a domain-specific language (DSL)\footnote{A programming language specialized to a particular application domain.} for writing configuration files called ``recipes''. ``Recipes'' are used to define in a declarative way the state of certain resources and define everything that is required to configure different parts of the system: they can contain the definition of software that should be installed and all the required dependencies, services that should be running or files that should be written. Given a ``recipe'' Chef ensures that all the software is installed in the right order and that each resource state is reached, eventually correcting those resources in a undesired state; ``recipes'' can be collected into ``cookbooks'' to be more maintainable and powerful. In addition Chef offers a centralized hub, called Chef Supermarket\footnote{\url{supermarket.chef.io}}, that collects a large number of ``cookbooks'' from the community freely downloadable.\\
 A base installation of Chef is composed by three main components, a \code{chef-server} that orchestrates all the Chef processes, multiple \code{chef-client} found on all the servers, and the user workstation that communicates with the Chef Server to launch commands.\\
 To simplify the communication with the \code{chef-server} Chef provides a command-line tool called Knife that helps users to manage nodes, ``cookbook'' and ``recipes'', and the majority of possible operations.
 
@@ -65,6 +65,7 @@ Chef and OpenStack can be combined and used together in different ways, many of 
 In this situation you can achieve a ``1 + N'' configuration that is one OpenStack Controller and N OpenStack Nodes, and the OpenStack services are predefined and you cannot configure an ad hoc configuration.
 Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services (both of Controller and Compute) are installed on a single node.\\
 These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a Vagrantfile that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
+
 \begin{lstlisting}[language=Ruby]
 machine 'controller' do
   add_machine_options vagrant_config: controller_config
@@ -98,7 +99,44 @@ However, with regard to this last aspect, it has several limitations:
 \subparagraph{Description}
 \label{subp:sota_puppet_desc}
 
-Similarly to Chef (described in section~\ref{sub:sota_chef}) 
+Similarly to Chef (described in section~\ref{sub:sota_chef}) Puppet\footnote{\url{www.puppetlabs.com}} is a configuration management system that allows you to define the state of a cloud infrastructure and then it automatically enforces the correct state.\\
+Puppet uses a declarative model where are defined the resource states and (likewise Chef) it's manifest files are written in a Ruby-like DSL. In these manifest files are defined the configurations, the nodes and how the configurations apply to nodes. Again Puppet will take care of ensuring that the system reaches the expected state. All these files are enclosed in ``modules'', a self-contained bundles of code and data easy to share and reuse. There are a large amount of them on Puppet Forge\footnote{\url{forge.puppetlabs.com}} repository.\\
+Puppet is structured in master-slave architecture: the master (that can be one or machines) serves the manifests and the files, and the clients polls the master at specific intervals of time to get their configurations so that the master never pushes nothing to them. This structure uses the ``Puppet master'' and ``Puppet agent'' applications.
+
+
+\subparagraph{Puppet and OpenStack}
+\label{subp:sota_puppet_openstack}
+
+As seen for Chef, Puppet can be very useful when dealing with OpenStack installation and maintenance. To configure and deploy an OpenStack infrastructure with the help of Puppet exists a set of ``modules'' freely downloadable from Puppet Forge that simplifies most of the operations such as OpenStack instances provisioning, configuration management and others.
+The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}} and allows to deploy both a multi-node and an all-in-one installation. Compared to Chef, with regard to OpenStack, Puppet is a bit more flexible because it allows you to control in more details the OpenStack services installed on every node; for example you can, combining the following instructions, in the Puppet's manifest file of a node different results can be achieved:
+
+\textit{Controller node:}
+\begin{lstlisting}[language=Ruby]
+node 'control.localdomain' {
+  include ::openstack::role::controller
+}
+\end{lstlisting}
+
+\textit{Controller node:}
+\begin{lstlisting}[language=Ruby]
+node 'storage.localdomain' {
+  include ::openstack::role::storage
+}
+
+node 'network.localdomain' {
+  include ::openstack::role::network
+}
+
+node /compute[0-9]+.localdomain/ {
+  include ::openstack::role::compute
+}
+\end{lstlisting}
+
+Obviously, in the same way for Chef, it is possible to configure multiple nodes to run in multiple Virtual Machines configured and launched with Vagrant and deploy the various OpenStack components with \code{puppetlabs-openstack}. This solution, as said earlier, is difficult to achieve on a machine with a limited amount of resources, and also on more powerful server is however slightly extensible.
+
+\subparagraph{Pro and Cons}
+\label{subp:sota_puppet_pro_cons}
+Even tough 
 
 \subsection{Docker}
 \label{sub:sota_docker}
