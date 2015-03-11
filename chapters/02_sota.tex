@@ -3,6 +3,10 @@
 %% STATE OF THE ARTS
 %%--------------------------------------------------------------------------
 
+% --------------------------------------------------------------------------- %
+% ---------------------------------- INTRO ---------------------------------- %
+% --------------------------------------------------------------------------- %
+
 
 \section{Introduction}
 \label{sec:sota_intro}
@@ -10,11 +14,19 @@ At the beginning of the development of the thesis we were mainly focused on the 
 Therefore we decided to develop aDock®, a suite of tools for creating performant, sandboxed, and configurable cloud infrastructure experimentation environments that developer, sysadmins and researchers can exploit to access a fully functional cloud installation of OpenStack.
 For that reason this chapter is divided into two sections that describe the state of the arts of Virtual Machine consolidation and of Cloud test environments.
 
+% ------------------------------------------------------------------------- %
+% ---------------------------------- VMs ---------------------------------- %
+% ------------------------------------------------------------------------- %
+
 \section{Virtual Machine consolidation}
 \label{sec:sota_vm_cons}
-In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins \note{(Find a better way to say it)} like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
+In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins \todo{(Find a better way to say it)} like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
 To reduce the impact of these complications are available some tools that make the process of setting up a cloud infrastructure experimentation environment more easy and manageable.
 The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the goal of running the desired sandboxed environment on limited hardware resources the three solution are used together with two core technologies for the cloud world, Vagrant and Containers (Docker), both outlined below.
+
+% -------------------------------------------------------------------------- %
+% ------------------------- CLOUD TEST ENVIRONMENT ------------------------- %
+% -------------------------------------------------------------------------- %
 
 \section{Cloud test environments}
 \label{sec:sota_test_env}
@@ -48,6 +60,9 @@ end
 Provisioners in Vagrant allows to automatically install and configure software in a Vagrant Box as part of the ``vagrant up'' process, therefore you can start with a base Vagrant Box, adapt it to your needs and eventually share it with other developers who can reproduce the same virtual development environment.
 Vagrant in combination with configuration management software such as Chef and Puppet is used to create repeatable and easy to setup development and test environments that rely on Virtual Machines.
 
+
+% ---------------------------------- CHEF ---------------------------------- %
+
 \subsection{Chef}
 \label{sub:sota_chef}
 
@@ -80,7 +95,7 @@ machine 'controller' do
 
 Of course it is possible to setup a ``1 + N'' configuration using different Vagrantfile to create and configure one VM to host the Controller and N VMs to host the Compute nodes. However it is unlikely to succeed in running a lot of VMs on the same host especially if they will contain a fully functional OpenStack installation as a Virtual Machine typically require a significant amount of resources to operate.
 
-\note{\dots  Insert timing to install OpenStack with Chef\dots}
+\todo{\dots  Insert timing to install OpenStack with Chef\dots}
 
 \subparagraph{Pro and Cons}
 \label{subp:sota_chef_pro_cons}
@@ -90,8 +105,12 @@ However, with regard to this last aspect, it has several limitations:
 \begin{itemize}
 \item \textit{Heaviness}: due the greed of resources of a Virtual Machine is very difficult to achieve a ``1 + N'' configuration for development or research purpose on a single machine. On the other hand the ``All-in-One Compute'' solution that allows a full OpenStack on a single Virtual Machine is very simplistic and doesn't represent a real environment setting as it runs all the OpenStack services on a single node.
 \item \textit{Lack of customization}: at the state of the art all of the described solutions install both the Controller node and the Compute node with a predefined set of installed service (in particular are installed all the OpenStack service excluded Object Storage, Metering, and Orchestration) so it is not possible to setup the environment with more or less services or new ones (as in our case).
-\item \note{think others\dots}
+\item \todo{think others\dots}
 \end{itemize}
+
+
+% ---------------------------------- PUPPET ---------------------------------- %
+
 
 \subsection{Puppet}
 \label{sub:sota_puppet}
@@ -136,11 +155,35 @@ Obviously, in the same way for Chef, it is possible to configure multiple nodes 
 
 \subparagraph{Pro and Cons}
 \label{subp:sota_puppet_pro_cons}
-Even tough 
+Puppet is an extremely powerful and mature tools for automated cloud infrastructure deploying: it streamlines the entire process automating every step of the software delivery process.\\
+However from our point of view it is more relevant to how it behave when a single developer or a researcher needs to deploy a cloud infrastructure within a single machine with limited amount of resources (a development workstation for example) or he/she has a little sysadmin skills (\todo{find better way}) and want to run test for developing or researches purposes. With regard to this aspect Puppet used with Vagrant has some key limitations:
+
+\begin{itemize}
+\item \textit{Heaviness}: A single Virtual Machine need generally a remarkable amount of resource, especially to host an OpenStack installation; for this reason it is very unlikely to be able to run the number of Virtual Machines needed to deploy a realistic multi-node installation of OpenStack on a single machine without compromising its usage. The all-in-one instead is frequently not sufficiently realistic, especially when testing algorithms or portion of code that involves multiple nodes.
+\item \todo{think others\dots}
+\end{itemize}
+
+% ---------------------------------- CHEF ---------------------------------- %
 
 \subsection{Docker}
 \label{sub:sota_docker}
+Docker\footnote{\url{www.docker.com}} is an open platform for developers and sysadmins to build, ship, and run distributed applications. Its core is the Docker Engine: it exploits Linux containers to virtualize a guest Operating System on an host one avoiding the considerable amount of resources necessary to run Virtual Machines.\\
+The main difference between the Docker solution and the Virtual Machine one lies in the way in which the hypervisor and the Docker Engine manage the guest Operating System. A Virtual Machine, as shown in figure ~\ref{fig:docker_vm} on page~\pageref{fig:docker_vm}, hosts a complete Operating System including application, dependency libraries, and, more important, the kernel; otherwise the Docker Engine runs as an isolated process in userspace on the host operating system and allows all the guest containers to share the kernel. Thus, it enjoys the resource isolation and allocation benefits of Virtual Machines but is much more portable and efficient; for our goals this aspect represents the possibility to run at the same time a larger number of containers compared to what we are able to achieve with Virtual Machines and also to ship per-built images of our modules \todo{Better way...}.\\
+To configure and then build a container image you have to write a Dockerfile that is a text document containing all the commands which you would have normally executed manually in order to take the container to the desired state and then call \code{\$ sudo docker build .} from the directory containing the file.\\
+Moreover Docker offers an online platform called Docker Hub\footnote{\url{hub.docker.com}} where you can upload both Dockerfile and pre-built container images.
+    
+\begin{figure}[!ht]
+\centering{\includegraphics[width=\textwidth]{images/docker_vs_vm.png}}
+\label{fig:docker_vm}
+\caption{Hypervisor and Docker Engine}
+\end{figure}
 
-\subsection{Dockentack}
+% ------------------------------- DOCKENSTACK ------------------------------- %
+
+\subsection{Dockenstack}
 \label{sub:sota_dockenstack}
 
+% ---------------------------------- NEAT ---------------------------------- %
+
+\subsection{Neat}
+\label{sub:sota_neat}
