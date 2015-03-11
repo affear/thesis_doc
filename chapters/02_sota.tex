@@ -78,7 +78,7 @@ To simplify the communication with the \code{chef-server} Chef provides a comman
 
 Chef and OpenStack can be combined and used together in different ways, many of which have a different goal compared to our thesis. Is it possible in fact to deploy and manage a production OpenStack installation running on multiple servers and supervised by a Chef Server using the subcommand \code{knife openstack} to control the OpenStack APIs through Chef and thus instantiate new physical servers with a chef-client installed or turn them off (\code{knife openstack server create / delete}).
 In this situation you can achieve a ``1 + N'' configuration that is one OpenStack Controller and N OpenStack Nodes, and the OpenStack services are predefined and you cannot configure an ad hoc configuration.
-Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services (both of Controller and Compute) are installed on a single node.\\
+Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services are installed on a single node.\\
 These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a Vagrantfile that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
 
 \begin{lstlisting}[language=Ruby]
@@ -103,7 +103,7 @@ Of course it is possible to setup a ``1 + N'' configuration using different Vagr
 Chef, as seen, is therefore a very powerful tool to create, manage and configure cloud environments and offers a lot of functionalities to structure the desired architecture. In combination with Vagrant is also useful to setup test environments for development or research purposes.\\
 However, with regard to this last aspect, it has several limitations:
 \begin{itemize}
-\item \textit{Heaviness}: due the greed of resources of a Virtual Machine is very difficult to achieve a ``1 + N'' configuration for development or research purpose on a single machine. On the other hand the ``All-in-One Compute'' solution that allows a full OpenStack on a single Virtual Machine is very simplistic and doesn't represent a real environment setting as it runs all the OpenStack services on a single node.
+\item \textit{Heaviness}: due the greed of resources of a Virtual Machine is very difficult to achieve a ``1 + N'' configuration for development or research purpose on a single machine. On the other hand the ``All-in-One Compute'' solution that allows a full OpenStack installation on a single Virtual Machine is very simplistic and doesn't represent a real environment setting as it runs all the OpenStack services on a single node.
 \item \textit{Lack of customization}: at the state of the art all of the described solutions install both the Controller node and the Compute node with a predefined set of installed service (in particular are installed all the OpenStack service excluded Object Storage, Metering, and Orchestration) so it is not possible to setup the environment with more or less services or new ones (as in our case).
 \item \todo{think others\dots}
 \end{itemize}
@@ -168,9 +168,9 @@ However from our point of view it is more relevant to how it behave when a singl
 \subsection{Docker}
 \label{sub:sota_docker}
 Docker\footnote{\url{www.docker.com}} is an open platform for developers and sysadmins to build, ship, and run distributed applications. Its core is the Docker Engine: it exploits Linux containers to virtualize a guest Operating System on an host one avoiding the considerable amount of resources necessary to run Virtual Machines.\\
-The main difference between the Docker solution and the Virtual Machine one lies in the way in which the hypervisor and the Docker Engine manage the guest Operating System. A Virtual Machine, as shown in figure ~\ref{fig:docker_vm} on page~\pageref{fig:docker_vm}, hosts a complete Operating System including application, dependency libraries, and, more important, the kernel; otherwise the Docker Engine runs as an isolated process in userspace on the host operating system and allows all the guest containers to share the kernel. Thus, it enjoys the resource isolation and allocation benefits of Virtual Machines but is much more portable and efficient; for our goals this aspect represents the possibility to run at the same time a larger number of containers compared to what we are able to achieve with Virtual Machines and also to ship per-built images of our modules \todo{Better way...}.\\
-To configure and then build a container image you have to write a Dockerfile that is a text document containing all the commands which you would have normally executed manually in order to take the container to the desired state and then call \code{\$ sudo docker build .} from the directory containing the file.\\
-Moreover Docker offers an online platform called Docker Hub\footnote{\url{hub.docker.com}} where you can upload both Dockerfile and pre-built container images.
+The main difference between the Docker solution and the Virtual Machine one lies in the way in which the hypervisor and the Docker Engine manage the guest Operating System. A Virtual Machine, as shown in figure ~\ref{fig:docker_vm} on page~\pageref{fig:docker_vm}, hosts a complete Operating System including application, dependency libraries, and, more important, the kernel; otherwise the Docker Engine runs as an isolated process in userspace on the host operating system and allows all the guest containers to share the kernel. Thus, it enjoys the resource isolation and allocation benefits of Virtual Machines but is much more portable and efficient; for our goals this aspect represents the possibility to run at the same time a larger number of containers compared to what we are able to achieve with Virtual Machines and also to ship pre-built images of our modules \todo{Better way...}.\\
+To configure and then build a container image you have to write a Dockerfile that is a text document containing all the commands which you would have normally executed manually in order to take the container to the desired state and then call \code{\$ sudo docker build .} from the directory containing the file. The command \code{\$ sudo docker run} will finally launch the container that will be almost instantly running.\\
+Moreover Docker offers an online platform called Docker Hub\footnote{\url{hub.docker.com}} where you can upload both Dockerfile and pre-built container images to streamline the sharing process.
     
 \begin{figure}[!ht]
 \centering{\includegraphics[width=\textwidth]{images/docker_vs_vm.png}}
@@ -182,8 +182,8 @@ Moreover Docker offers an online platform called Docker Hub\footnote{\url{hub.do
 
 \subsection{Dockenstack}
 \label{sub:sota_dockenstack}
+One of the first an attempts to create a cloud test environments based on OpenStack and Docker is a Dockenstack\footnote{\url{github.com/ewindisch/dockenstack}}. It is an independent and not actively supported project, but is a good starting point to show the potential derived from using Docker.\\
+The project is basically composed by a Dockerfile and a bunch of scripts that will setup and configure an OpenStack installation using DevStack (\todo{shall we talk about it in the intro?}) in a Docker container.\\
+A pre-built image is available on Docker Hub, so with the command \code{docker run -privileged -t -i ewindisch/dockenstack} Docker will automatically download and run the container.\\
+It is however a very basic solution as it only allows all-in-one OpenStack installation 
 
-% ---------------------------------- NEAT ---------------------------------- %
-
-\subsection{Neat}
-\label{sub:sota_neat}
