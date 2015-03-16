@@ -18,14 +18,14 @@
 
 
 % --------------------------------------------------------------------------- %
-% ---------------------------------- INTRO ---------------------------------- %
+% ---------------------------------- ADOCK ---------------------------------- %
 % --------------------------------------------------------------------------- %
 
 
-\section{Introduction}
+\section{Our Solution, aDock}
 \label{sec:adock_intro}
 The lack of a uniform and standardized test environment for cloud systems brought us to develop aDock.\\
-aDock is a suite of tools that lets the final user to deploy a complete OpenStack system; run simulations against it; collect output data and view results on a friendly user interface.\\
+aDock is a suite of tools that lets the final user deploy a complete OpenStack system; run simulations against it; collect output data and view results on a friendly user interface.\\
 We chose OpenStack as cloud computing software platform, because of its open-source nature and because of its continuous evolution with the aim of keeping up with the last cloud standards.\\
 Our intended users are OpenStack developers who need to run their code in a fully functional environment and researchers who want to try their algorithm on a complete cloud system to test out its behavior.
 
@@ -36,41 +36,70 @@ In this section, we will identify both functional and non-functional requirement
 \subsection{Functional Requirements}
 \label{sub:func_req}
 
-\paragraph{FR1}\label{p:fr1} \emph{aDock should provide tools to deploy a complete environment} \hfill \\
-A user should be able to start and update OpenStack's nodes with a single command. aDock should provide the user with an abstraction of a server called ``node''. The ``node'', in its depth, is an Ubuntu based Docker container, shipped with OpenStack services dependencies. A user should be able to decide which services install and start on each node and their internal configuration using a configuration file.
-\subparagraph{Solution} FakeStack (see chapter \ref{chap:fakestack}) is the aDock module which provides the user with the specified tools. Starting a node is as easy as \code{\$ run\_node}. A node can be configured by means of a simple configuration file. Nodes are of two types, \textit{controllers} and \textit{computes}. Controller nodes are different from compute ones because they are shipped with \textit{MySQL} and \textit{RabbitMQ} installations.
+\paragraph{FR1}\label{p:fr1} \emph{aDock should provide tools to deploy a complete environment.} \hfill \\
+A user should be able to start and update OpenStack's nodes with a single command. aDock should provide the user with an abstraction of a server called ``node''. The ``node'', in its depth, is an Ubuntu based Docker container, shipped with OpenStack services dependencies. A user should be able to decide which services will be installed and started on each node and their internal configuration using a configuration file.
+\subparagraph{Solution} FakeStack (see section \ref{sec:fakestack}) is the aDock module which provides the user with the specified tools. Starting a node is as easy as \code{\$ run\_node}. A node can be configured by means of a simple configuration file. Nodes are of two types, \textit{controllers} and \textit{computes}. Controller nodes are different from compute ones because they are shipped with \textit{MySQL} and \textit{RabbitMQ} installations.
 
-\paragraph{FR2}\label{p:fr2} \emph{aDock should provide a simulation tool} \hfill \\
-If the user puts his/her code into OpenStack he/she probably aims at running simulations and examine the new piece of code behavior interaction with the entire system. Simulations should be configurable according to the user needs and repeatable.
-\subparagraph{Solution} Oscard (see chapter \ref{chap:sim_tools}) is the aDock module which takes care of running repeatable and configurable simulations against an OpenStack system. Simulations are configurable in terms of operations executed (their weights) and their number.
+\paragraph{FR2}\label{p:fr2} \emph{aDock should provide a tool to run simulations.} \hfill \\
+If the user puts his/her code into OpenStack he/she probably aims at running simulations and examine the new piece of code behavior in interacting with the entire system. Simulations should be configurable according to the user needs and repeatable.
+\subparagraph{Solution} Oscard (see section \ref{sec:oscard}) is the aDock module which takes care of running repeatable and configurable simulations against an OpenStack system.
 
-\paragraph{FR3}\label{p:fr3} \emph{aDock should store simulations output persistently} \hfill \\
+\paragraph{FR3}\label{p:fr3} \emph{aDock should persistently store simulations output.} \hfill \\
 Once a simulation has been run, it could be interesting to store the outputs of it in terms of generic metrics about the system, such as the average of the number of compute nodes active during the simulation, the average of virtual CPUs used and so on.
-\subparagraph{Solution} Oscard (see chapter \ref{chap:sim_tools}) by default, stores the aggregates of a simulation into a Firebase\footnote{\url{https://www.firebase.com/}} backend. Our simulations stores their result on a Firebase backend called Bifrost (see chapter \ref{chap:sim_tools}).
+\subparagraph{Solution} Oscard, by default, stores the aggregates of a simulation into a Firebase\footnote{\url{https://www.firebase.com/}} backend. In our case, the backend is called Bifrost (see section \ref{sec:others}).
 
 \paragraph{FR4}\label{p:fr4} \emph{aDock should provide a user interface} \hfill \\
-Result stored should be displayed to user.
-\subparagraph{Solution} Polyphemus (see chapter \ref{chap:sim_tools}) is the aDock module which takes care of displaying to the user simulation results in a friendly way.
+Although Firebase provides an interactive user interface, data is displayed in a \textit{JSON} fashion and it is, therefore, not easily understandable and browseable. Simulations results should be displayed to user in a friendly manner, using charts to give the user a glimpse of the current situation. Data representation should be given in real-time.
+\subparagraph{Solution} Polyphemus (see section \ref{sec:others}) is the aDock module which takes care of displaying to the user real-time simulation results in a friendly manner.
+
+\subsection{aDock Architecture}
+\label{sub:adock_arch}
+aDock turns out to be a modular system where each component is configurable and has a precise purpose. FakeStack is employed to start nodes; Oscard runs simulations and collects aggregates on Bifrost; Polyphemus is the eye on the data that shows the user the results obtained.
+In figure~\ref{fig:adock_arch} we highlight the general architecture of aDock.
+
+\todo{insert aDock architecture picture}
 
 \subsection{Non-Functional Requirements}
 \label{sub:nonfunc_req}
+As opposed to functional requirements, aDock has very strong non-functional requirements in order to give a suitable testing environment to our stakeholders. In general we take leverage of Docker and DevStack and use their biggest strength. Docker gives us high speed in running containers and sandboxing by construction and makes aDock cross-platform; while DevStack gives us great flexibility and configurability for what concerns OpenStack services.
 
-\paragraph{NFR1}\label{p:nfr1} \emph{aDock should allow users to easily create and deploy experimentation OpenStack environments.} \hfill \\
- aDock should provide, first and foremost, a cross-platform suite of tools for deploying a cloud system. This is our first and most important requirement, and  we can refine it into three sub-requirements.
+\paragraph{NFR1}\label{p:nfr1} \emph{Users should be able to choose which code is running in OpenStack.} \hfill \\
+Before booting the entire system the user should be able to choose if he/she wants to run OpenStack code from a precise code repository which is, in general, the better and more supported way to version and share code among developers and even physical machines. Speaking in Git\footnote{\url{https://git.com}} \todo{git link} terms, a user could choose to run the most up to date code (which may be buggy) and so get the code from branch \code{master}, or maybe get a much more stable OpenStack version and get the code from branch \code{stable/juno}. The most interesting fact (and this is the scenario we have in our mind) is that the user could choose to fork an OpenStack service and see his/her code running onto nodes.
 
-\begin{enumerate}
-	\item \emph{aDock experimentation environments should always be aligned with the latest OpenStack code developments.} \hfill \\
-	 During installation aDock should always make sure to pull the most recent OpenStack code from its public repositories. aDock should also allow existing experimentation environments to ``update'' their OpenStack services to any newer versions that may have been released in the meanwhile. This is an important feature that needs to be supported. The OpenStack foundation is a wide community of over $200$ companies that collaborate around a six-month, time-based, release cycle with frequent milestones. This translates into a high commit frequency on their github repositories; for example, it is not uncommon for the Nova subproject to have between $40$ and $80$ commits per week. We want the user of aDock to be able to easily keep up with the project.
+\subparagraph{Solution} All of this is achievable thanks to DevStack, which installs OpenStack services cloning repositories from GitHub and running \code{python setup.py install}. By default, DevStack clones official OpenStack repositories from branch \code{master}, but it is possible to specify different repository URLs and branches for each of the OpenStack services by means of \code{local.conf} files.
 
-	\item \emph{The experimentation environment should be highly performant and sandboxed.} \hfill \\
-	 Practitioners and researchers often need to test algorithms that, by design, target the management and/or optimization of tens of physical servers. Since we can assume that not everyone will have that amount of resources, we believe that aDock should be as light-weight as possible. It should be possible to run aDock on limited hardware, potentially even on one's personal laptop. It is under this assumption that sandboxing becomes important; indeed, the experimentation environment should not have any sort of repercussions on the user's machine; we want the user to be able to build and tear down the environment with no consequences. 
+\paragraph{NFR2}\label{p:nfr2} \emph{aDock should be lightweight.} \hfill \\
+Users often need to test algorithms that, by design, target the management and/or optimization of tens of physical servers. Since we can assume that not everyone will have that amount of resources, we believe that aDock should be as light-weight as possible. It should be possible to run aDock on limited hardware, potentially even on one's personal laptop. It is under this assumption that sandboxing becomes important; indeed, the experimentation environment should not have any sort of repercussions on the user's machine; we want the user to be able to build and tear down the environment with no consequences.
 
-	\item \emph{The experimentation environment should be highly configurable.} \hfill \\
-	 Our primary goal with aDock is to provide a fast and easy way to create the experimentation environment. We believe that building a system which allows users to design the overall architecture of the cloud system is out of scope of this thesis, mainly because of the intrinsic high complexity and vastness of OpenStack's system itself. Up to now, as a proof of concept, we will focus on ``1 + N'' architecture, with $1$ controller node and $N$ compute nodes. The possibility to configure the system remains in configuring OpenStack services in terms of their internal behavior.
-\end{enumerate}
+\subparagraph{Solution} Docker is a virtualization system which relies on Docker containers which are much more lightweight than virtual machines \todo{ need ref{}! }. Docker gives us, by construction, speed and lightness.
 
-\paragraph{NFR2}\label{p:nfr2} \emph{Users should be able to easily integrate their code in the environment.} \hfill \\
- OpenStack, although extremely complex, is a well modularized project that presents many extension points that are easy to identify. A good example of this is OpenStack's Scheduler component; it is responsible for VM placement and its behavior can be modified simply by implementing new filtering and weighing solutions. aDock should allow any new code to be immediately activated and tested within the execution environment. To achieve this we will allow the experimentation environment to pull code from git repositories that are forks of the main OpenStack code-base. One will only have to fork the OpenStack service that he/she wants to extend or change, and aDock will take care of the rest.  
+\paragraph{NFR3}\label{p:nfr3} \emph{The experimentation environment should be highly configurable.} \hfill \\
+Our primary goal with aDock is to provide a fast and easy way to create the experimentation environment. We believe that building a system which allows users to design the overall architecture of the cloud system is out of scope of this thesis, mainly because of the intrinsic high complexity and vastness of OpenStack's system itself. Up to now, as a proof of concept, we will focus on ``1 + N'' architecture, with $1$ controller node and $N$ compute nodes.
 
-\paragraph{NFR3}\label{p:nfr3} \emph{aDock should allow users to run repeatable simulations to check their code's behavior.} \hfill \\
- It is of paramount importance that practitioners and researchers be able to compare their results with baseline approaches, as well as with related work from the state of the art. aDock should make it easy to (i) create new simulated experiments, (ii) see how the system behaves with the new code in real time, and (iii) compare an experiment's results with those of others.
+\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure OpenStack in all its aspects through \code{local.conf} file. Each service can be configured in each of DevStack installation phases \todo{phases}. It is as simple as adding a \code{[[post-config|\$NOVA-CONF]]} \todo{syntax please} and configure options below. \todo{add ref to devstack conf!}
+
+\paragraph{NFR4}\label{p:nfr4} \emph{aDock should allow users to run repeatable simulations.} \hfill \\
+It is of paramount importance that users be able to compare their results with baseline approaches, as well as with related work from the state of the art. aDock should make it easy to compare an experiment's results with those of others on the same simulations.
+
+\subparagraph{Solution} Oscard will take into account repeatability both giving the possibility to run the same simulation, at the same time, on multiple hosts, both using pseudo-randomization (see section \ref{sec:oscard}).
+
+% --------------------------------------------------------------------------- %
+% -------------------------------- FAKESTACK -------------------------------- %
+% --------------------------------------------------------------------------- %
+
+\section{FakeStack}
+\label{sec:fakestack}
+
+% --------------------------------------------------------------------------- %
+% ---------------------------------- OSCARD --------------------------------- %
+% --------------------------------------------------------------------------- %
+
+\section{Oscard}
+\label{sec:oscard}
+
+% --------------------------------------------------------------------------- %
+% --------------------------- BIFROST + POLYPHEMUS -------------------------- %
+% --------------------------------------------------------------------------- %
+
+\section{Other Components}
+\label{sec:others}
