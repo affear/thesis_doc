@@ -102,6 +102,67 @@ It is of paramount importance that users be able to compare their results with b
 
 \section{FakeStack}
 \label{sec:fakestack}
+FakeStack is the aDock module which allows the user to manage \textit{nodes}, which are the building blocks of an OpenStack system. Nodes are of two types: \textit{controllers} and \textit{computes}. Both of them are Ubuntu-based Docker containers shipped with pre-installed software that satisfies most\footnote{main services as \textit{Nova}, \textit{Keystone}, \textit{Glance} are actually supported.} of OpenStack's services dependencies. Both controller and compute nodes are configurable by means of simple configuration files ~\ref{sub:fakestack_conf}.\\
+FakeStack provides a set of scripts to handle node startup, service updating on live nodes and other features~\ref{sub:fakestack_scripts}.
+
+\subsection{Nodes}
+\label{sub:fakestack_scripts}
+As already anticipated in requirement~\ref{p:nfr3}, we will focus on ``1 + N'' architectures. This architecture is characterized by $1$ controller node that handles $N$ compute nodes.\\
+The main difference between a controller and a compute node is the presence, in the first one, of database (in our case, \textit{MySQL}) and message broker (in our case, \textit{RabbitMQ}) services, compulsory for OpenStack's controller nodes.
+
+To understand how FakeStack really works, it is useful to examine its internal structure:
+
+\begin{figure}[!ht]
+\centering{\includegraphics{images/fakestack_tree.png}}
+\label{fig:fakestack_tree}
+\caption{FakeStack's file structure}
+\end{figure}
+
+As we can see in figure~\ref{fig:fakestack_tree}, nodes have two separated \texttt{Dockerfile}s (which makes them two different Docker containers), but they share a set of scripts contained in \texttt{shared} folder:
+
+\begin{description}
+	\item[cmd.sh] This is the script that will be run when the container starts (\code{docker run}). In algorithm~\ref{alg:cmd.sh} we explain its behavior in terms of pseudo-code.
+	\begin{algorithm}[H]
+	\caption{\texttt{cmd.sh} behavior}
+	\label{alg:cmd.sh}
+	% 1 is for "number any line", 0 for "no"
+	\begin{algorithmic}[0]
+		\If{node is \emph{controller}}
+			\State set last IP in Docker bridge \Comment{assign static IP address to \emph{controller}}
+		\EndIf
+
+		\State ping 8.8.8.8 \Comment{Check internet connection}
+
+		\If{node is \emph{controller}}
+			\State start \texttt{mysql}
+			\State start \texttt{rabbitmq-server}
+		\EndIf
+
+		\State \textbf{./stack.sh} \Comment{real OpenStack installation (using DevStack)}
+
+		\State /bin/bash \Comment{let the user work on the container}
+	\end{algorithmic}
+	\end{algorithm}
+	
+
+	\item[reinstall\_service.sh]
+	\item[update\_quotas.sh]
+\end{description}
+
+Once a node has been built, all of this shared scripts are copied to the file-system of the node.\\
+\texttt{local.conf} file, instead, is bound\footnote{\texttt{local.conf} is a \href{https://docs.docker.com/userguide/dockervolumes/\#data-volumes}{\textit{Data Volume}}. Basically it is a file whose modifications are visible at each container's run.} to node's file-system avoiding rebuilding at each modification.
+
+When a node is started, \texttt{cmd.sh} will run, resulting in running DevStack's \texttt{stack.sh}. It is at this moment that OpenStack's installation starts~\ref{} \todo{reference to DevStack's detailed description}.
+
+\subsection{Scripts}
+\label{sub:fakestack_scripts}
+
+\subsection{Configuration}
+\label{sub:fakestack_conf}
+using DevStack's syntax ...
+
+\subsection{Example}
+\label{sub:fakestack_ex}
 
 % --------------------------------------------------------------------------- %
 % ---------------------------------- OSCARD --------------------------------- %
