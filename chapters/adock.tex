@@ -64,19 +64,32 @@ In figure~\ref{fig:adock_arch} we highlight the general architecture of aDock.
 As opposed to functional requirements, aDock has very strong non-functional requirements in order to give a suitable testing environment to our stakeholders. In general we take leverage of Docker and DevStack and use their biggest strength. Docker gives us high speed in running containers and sandboxing by construction and makes aDock cross-platform; while DevStack gives us great flexibility and configurability for what concerns OpenStack services.
 
 \paragraph{NFR1}\label{p:nfr1} \emph{Users should be able to choose which code is running in OpenStack.} \hfill \\
-Before booting the entire system the user should be able to choose if he/she wants to run OpenStack code from a precise code repository which is, in general, the better and more supported way to version and share code among developers and even physical machines. Speaking in Git\footnote{\url{https://git.com}} \todo{git link} terms, a user could choose to run the most up to date code (which may be buggy) and so get the code from branch \code{master}, or maybe get a much more stable OpenStack version and get the code from branch \code{stable/juno}. The most interesting fact (and this is the scenario we have in our mind) is that the user could choose to fork an OpenStack service and see his/her code running onto nodes.
+Before booting the entire system the user should be able to choose if he/she wants to run OpenStack code from a precise code repository which is, in general, the better and more supported way to version and share code among developers and even physical machines. Speaking in Git\footnote{\url{http://git-scm.com/}} terms, a user could choose to run the most up to date code (which may be buggy) and so get the code from branch \code{master}, or maybe get a much more stable OpenStack version and get the code from branch \code{stable/juno}. The most interesting fact (and this is the scenario we have in our mind) is that the user could choose to fork an OpenStack service and see his/her code running onto nodes.
 
 \subparagraph{Solution} All of this is achievable thanks to DevStack, which installs OpenStack services cloning repositories from GitHub and running \code{python setup.py install}. By default, DevStack clones official OpenStack repositories from branch \code{master}, but it is possible to specify different repository URLs and branches for each of the OpenStack services by means of \code{local.conf} files.
 
 \paragraph{NFR2}\label{p:nfr2} \emph{aDock should be lightweight.} \hfill \\
 Users often need to test algorithms that, by design, target the management and/or optimization of tens of physical servers. Since we can assume that not everyone will have that amount of resources, we believe that aDock should be as light-weight as possible. It should be possible to run aDock on limited hardware, potentially even on one's personal laptop. It is under this assumption that sandboxing becomes important; indeed, the experimentation environment should not have any sort of repercussions on the user's machine; we want the user to be able to build and tear down the environment with no consequences.
 
-\subparagraph{Solution} Docker is a virtualization system which relies on Docker containers which are much more lightweight than virtual machines \todo{ need ref{}! }. Docker gives us, by construction, speed and lightness.
+\subparagraph{Solution} Docker is a virtualization system which relies on Docker containers which are much more lightweight than virtual machines\footnote{\url{http://devops.com/blogs/devops-toolbox/docker-vs-vms/}} \todo{is the ref authoritative?}. Docker gives us, by construction, speed and lightness.
 
 \paragraph{NFR3}\label{p:nfr3} \emph{The experimentation environment should be highly configurable.} \hfill \\
 Our primary goal with aDock is to provide a fast and easy way to create the experimentation environment. We believe that building a system which allows users to design the overall architecture of the cloud system is out of scope of this thesis, mainly because of the intrinsic high complexity and vastness of OpenStack's system itself. Up to now, as a proof of concept, we will focus on ``1 + N'' architecture, with $1$ controller node and $N$ compute nodes.
 
-\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure OpenStack in all its aspects through \code{local.conf} file. Each service can be configured in each of DevStack installation phases \todo{phases}. It is as simple as adding a \code{[[post-config|\$NOVA-CONF]]} \todo{syntax please} and configure options below. \todo{add ref to devstack conf!}
+\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure OpenStack in all its aspects through \code{local.conf} file. Each service can be configured in each of DevStack installation phases. Each service, during installation, passes through \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra} phases\footnote{\url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring a service is as simple as adding few lines to \code{local.conf} file:
+
+\begin{lstlisting}[title=Adding per-service configuration to DevStack's local.conf file]
+[[post-config|\$NOVA-CONF]]
+[DEFAULT]
+verbose=True
+logdir=/var/log/my-nova-logdir
+
+# SCHEDULER
+compute_scheduler_driver=nova.scheduler.MyMagicScheduler
+# VIRT DRIVER
+compute_driver=nova.virt.fake.MyAmazingFakeDriver
+\end{lstlisting}
+
 
 \paragraph{NFR4}\label{p:nfr4} \emph{aDock should allow users to run repeatable simulations.} \hfill \\
 It is of paramount importance that users be able to compare their results with baseline approaches, as well as with related work from the state of the art. aDock should make it easy to compare an experiment's results with those of others on the same simulations.
