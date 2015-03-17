@@ -3,6 +3,8 @@
 %% STATE OF THE ARTS
 %%--------------------------------------------------------------------------
 
+
+
 % --------------------------------------------------------------------------- %
 % ---------------------------------- INTRO ---------------------------------- %
 % --------------------------------------------------------------------------- %
@@ -10,19 +12,23 @@
 
 \section{Introduction}
 \label{sec:sota_intro}
-At the beginning of the development of the thesis we were mainly focused on the implementation of a module for OpenStack that would allow to implement different consolidation algorithms and test them to see their real impact on a cloud system in terms of resource allocation. During the first phases we faced with the problem of running, testing and benchmarking our code in an OpenStack environment: to deal with aspects like scheduling, VM placement, and consolidation we needed an highly configurable system that would allow us to run simulations and benchmark to evaluate the goodness of our solution. We wanted it to be fully customizable to match different requirements and let the user customize a lot of aspect such as the structure of the environments, the number of compute nodes (the nodes that host the Virtual Machines), their fake characteristics or the OpenStack services to run. Secondly we needed a way to automatically simulate, in a repeatable way, the workload generated from user applications that normally run on an OpenStack installation. At last we realized that it would be very useful to show the real time data of the simulations to analyze the behavior of the system in different configurations.
-Therefore we decided to develop aDock®, a suite of tools for creating performant, sandboxed, and configurable cloud infrastructure experimentation environments that developer, sysadmins and researchers can exploit to access a fully functional cloud installation of OpenStack.
+At the beginning of the development of the thesis we were mainly focused on the implementation of a module for OpenStack that would allow to implement different consolidation algorithms and test them to see their real impact on a cloud system in terms of resource allocation. During the first phases we faced with the problem of running, testing and benchmarking our code in an OpenStack environment: to deal with aspects like scheduling, VM placement, and consolidation we needed an highly configurable system that would allow us to run simulations and benchmark to evaluate the goodness of our solution. 
+A common barrier to experimenting with cloud infrastructure is in fact the lack of access to a fully functional cloud installation. Although OpenStack can be used to create testbeds, it is not uncommon in literature to find works that are plagued by unrealistic setups that use only a handful of servers. Moreover, setting up a testbed is necessary but not sufficient. One must also be able to create repeatable experiments that can be used to compare one’s results to baseline or related approaches from the state of the art.
+So we designed and develop a system to address this problem: we wanted it to be fully customizable to match different requirements and let the user customize a lot of aspect such as the structure of the environments, the number of compute nodes (the nodes that host the Virtual Machines), their fake characteristics or the OpenStack services to run. Secondly we needed a way to automatically simulate, in a repeatable way, the workload generated from user applications that normally run on an OpenStack installation. At last we realized that it would be very useful to show the real time data of the simulations to analyze the behavior of the system in different configurations.
+Therefore we decided to develop aDock®, a suite of tools for creating performance, sandboxed, and configurable cloud infrastructure experimentation environments that developer, sysadmins and researchers can exploit to access a fully functional cloud installation of OpenStack.
 For that reason this chapter is divided into two sections that describe the state of the arts of Virtual Machine consolidation and of Cloud test environments.
 
+
 % ------------------------------------------------------------------------- %
-% ---------------------------------- VMs ---------------------------------- %
+% --------------------------- VMs consolidation --------------------------- %
 % ------------------------------------------------------------------------- %
 
 \section{Virtual Machine consolidation}
 \label{sec:sota_vm_cons}
-In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins \todo{(Find a better way to say it)} like developers or researchers, it has infact an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
-To reduce the impact of these complications are available some tools that make the process of setting up a cloud infrastructure experimentation environment more easy and manageable.
-The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the goal of running the desired sandboxed environment on limited hardware resources the three solution are used together with two core technologies for the cloud world, Vagrant and Containers (Docker), both outlined below.
+
+At its most basic essence, cloud computing can be seen as a means to provide developers with computation, storage, and networking resources on-demand, using virtualization techniques and the service abstraction \cite{Armbrust:2010ee}. The service abstraction makes the cloud suitable for use in a wide variety of scenarios, allowing software developers to create unique applications with very small upfront investments, both in terms of capital outlays and in terms of required technical expertise. Thanks to Cloud Computing, Internet software services have rightfully taken their place as important enablers in areas of great social importance, such as ambient assisted living \cite{Zhang:2011dq}, education \cite{Sultan:2010fd}, social networking \cite{Chard:2010eh}, and mobile applications \cite{Fernando:2013ip}.
+
+Managing a Cloud Infrastructure, however, presents many unique challenges. For example, there has been a lot of focus in the last few years on Virtual Machine Placement and Server Consolidation, given the role they play in optimizing resource utilization and energy consumption \cite{Feller:2012kf}, \cite{Goudarzi:2012gw}. Virtual Machine (VM) Placement \cite{Meng:2010im}, \cite{Xu:2010df} defines how a cloud installation decides on which physical server to create a new virtual machine, when one is requested. Server Consolidation techniques \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, on the other hand, allow a cloud provider to perform periodical run-time optimizations, for example through the live migration of VMs. The goal is always to desist from having too many under-utilized hardware resources given a specific workload, and to achieve this without compromising the quality of service that is offered to the cloud’s customers.
 
 % -------------------------------------------------------------------------- %
 % ------------------------- CLOUD TEST ENVIRONMENT ------------------------- %
@@ -30,6 +36,11 @@ The three main ones are Chef, Puppet, and Dockenstack. In order to achieve the g
 
 \section{Cloud test environments}
 \label{sec:sota_test_env}
+
+In the cloud world is fundamental, as in any engineering field, to be able to test environment configurations and algorithms, both to analyze the behavior of tested code that integrates with a real environment and to benchmark and collect data for researches and experimentations. Unfortunately it can be expensive and complex to create and manage a cloud test environment in terms of time, resources and expertises, especially if the hardware resources like server machines or network infrastructures are limited. Fully understand and handle an OpenStack installation is not easy, especially for non sysadmins \todo{(Find a better way to say it)} like developers or researchers, it has indeed an high learning curve and often it is necessary a lot of time to achieve a good and desired result.
+To reduce the impact of these complications are available some tools that make the process of setting up a cloud infrastructure experimentation environment more easy and manageable.
+For these reasons and for the growing need of advanced system management configuration management tools, such as Chef [18] and Puppet [19], have become increasingly mainstream. These tools provide domain-specific declarative languages for writing complex system configurations, allowing developers to specify concepts such as ``what software packages need to be installed'', ``what services should be running on each hardware node'', etc. More recently OpenStack has started collaborating both with Chef (see section \ref{sub:sota_chef}) and Puppet (see section \ref{sub:sota_puppet}) to create new means to configure and deploy fully-functional OpenStack environments on bare-metal hardware, as well as on Vagrant virtual machines. The combination of a system management tool, like Chef or Puppet, and Vagrant can be used to setup a virtualized experimentation environment. However, these are complex sysadmin tools that require strong technical skills.\\
+Below we are presenting them highlighting their main features and their strengths and weaknesses with respect to our thesis topic.
 
 \subsection{Vagrant}
 \label{sub:sota_vagrant}
@@ -185,5 +196,5 @@ Moreover Docker offers an online platform called Docker Hub\footnote{\url{hub.do
 One of the first an attempts to create a cloud test environments based on OpenStack and Docker is a Dockenstack\footnote{\url{github.com/ewindisch/dockenstack}}. It is an independent and not actively supported project, but is a good starting point to show the potential derived from using Docker.\\
 The project is basically composed by a Dockerfile and a bunch of scripts that will setup and configure an OpenStack installation using DevStack (\todo{shall we talk about it in the intro?}) in a Docker container.\\
 A pre-built image is available on Docker Hub, so with the command \code{docker run -privileged -t -i ewindisch/dockenstack} Docker will automatically download and run the container.\\
-It is however a very basic solution as it only allows all-in-one OpenStack installation 
+This made it a good solution for beginners wanting to learn OpenStack, but inadequate for advanced experiments, such as experiments regarding Virtual Machines placement and server consolidation algorithms.
 
