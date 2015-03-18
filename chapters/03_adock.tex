@@ -186,7 +186,7 @@ Most important, it is possible to choose a different Git repository and Git bran
 Thanks to this important piece of configuration, a user can \textit{fork} an OpenStack project; develop its code and use its new forked repository URL in DevStack's configuration.\\
 In listing~\ref{lst:localconf_ex} we show a possible complete example of \texttt{local.conf} file for a compute node.
 
-\begin{lstlisting}[float, floatplacement=H, caption={Choose OpenStack's enabled services}, label={lst:enabled_services}, numbers=none]
+\begin{lstlisting}[floatplacement=H, caption={Choose OpenStack's enabled services}, label={lst:enabled_services}, numbers=none]
 ... # Other configuration options
 
 # Enables:
@@ -198,7 +198,7 @@ ENABLED_SERVICES=n-cpu,n-api,n-net
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[float, floatplacement=H, caption={Internal configuration of Nova}, label={lst:driver_conf}, numbers=none]
+\begin{lstlisting}[floatplacement=H, caption={Internal configuration of Nova}, label={lst:driver_conf}, numbers=none]
 ... # Other configuration options
 
 [[post-config|$NOVA_CONF]]
@@ -208,7 +208,7 @@ compute_driver=nova.virt.fake.MyFakeDriver
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[float, floatplacement=H, caption={Change repository URL}, label={lst:change_repo}, numbers=none]
+\begin{lstlisting}[floatplacement=H, caption={Change repository URL}, label={lst:change_repo}, numbers=none]
 ... # Other configuration options
 
 NOVA_REPO=https://github.com/me/nova.git
@@ -217,7 +217,7 @@ NOVA_BRANCH=my-branch
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[float, floatplacement=H, caption={Complete \texttt{local.conf} example for compute node}, label={lst:localconf_ex}]
+\begin{lstlisting}[floatplacement=H, caption={Complete \texttt{local.conf} example for compute node}, label={lst:localconf_ex}]
 [[local|localrc]]
 FLAT_INTERFACE=eth0
 MULTI_HOST=1
@@ -251,6 +251,37 @@ compute_driver=nova.virt.fake.MyFakeDriver
 
 \subsection{Example}
 \label{sub:fakestack_ex}
+In this section we provide an example on how to use FakeStack in a pseudo-code fashion.\\
+Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's commands and standard input to handle Linux screens. It refers to a user that wants to launch a ``1 + 5'' architecture from scratch. In this case we suppose that the user will start a ``vanilla'' OpenStack version and so he/she doesn't need to modify configuration files.
+
+\begin{algorithm}[H]
+\caption{Launching a ``1 + 5'' architecture with aDock}
+\label{alg:example}
+\begin{algorithmic}[0]
+	\State \texttt{git clone https://github.com/affear/fakestack}
+	\State \texttt{cd fakestack}
+	\State \texttt{source fakerc} \Comment{all aDock commands are now available}
+	\State \texttt{ftools\_createbr docbr} \Comment{``docbr'' is the name of the new bridge}
+	\State \texttt{sudo nano /etc/default/docker} \Comment{adding \code{-b docbr} option to Docker's configuration}
+	\State \texttt{sudo service docker restart}
+	\State % blank line
+	\State \texttt{ftools\_runctrl}
+	\State \Comment{waiting for controller to finish installation}
+	\State \texttt{ftools\_runcmps $5$}
+	\State \texttt{screen -R} \Comment{attaching to the only screen active (\texttt{running}). Window is \texttt{ctrl}}
+	\State \emph{\texttt{CTRL+A N}} \Comment{window is now \texttt{cmps}}
+	\State
+	\State \emph{enter \texttt{y} to confirm that a controller node is up and we want to start compute nodes}
+	\State
+	\State \Comment{wait for compute nodes to finish}
+	\State \emph{\texttt{CTRL+A P} for two times} \Comment{\texttt{ctrl} window}
+	\State \texttt{source openrc admin admin}
+	\State \texttt{nova service-list} \Comment{$5$ compute nodes should be shown}
+	\State \texttt{nova boot --image cirros --flavor 1 samplevm} \Comment{Spawns a new virtual machine}
+	\State \ldots
+	\State \ldots \Comment{enjoy your OpenStack environment}
+\end{algorithmic}
+\end{algorithm}
 
 % --------------------------------------------------------------------------- %
 % ---------------------------------- OSCARD --------------------------------- %
