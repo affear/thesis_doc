@@ -102,7 +102,7 @@ It is of paramount importance that users be able to compare their results with b
 
 \section{FakeStack}
 \label{sec:fakestack}
-FakeStack is the aDock module which allows the user to manage \textit{nodes}, which are the building blocks of an OpenStack system. Nodes are of two types: \textit{controllers} and \textit{computes}. Both of them are Ubuntu-based Docker containers shipped with pre-installed software that satisfies most\footnote{main services as \textit{Nova}, \textit{Keystone}, \textit{Glance} are actually supported.} of OpenStack's services dependencies. Both controller and compute nodes are configurable by means of simple configuration files ~\ref{sub:fakestack_conf}.\\
+FakeStack\footnote{\url{https://github.com/affear/fakestack}} is the aDock module which allows the user to manage \textit{nodes}, which are the building blocks of an OpenStack system. Nodes are of two types: \textit{controllers} and \textit{computes}. Both of them are Ubuntu-based Docker containers shipped with pre-installed software that satisfies most\footnote{main services as \textit{Nova}, \textit{Keystone}, \textit{Glance} are actually supported.} of OpenStack's services dependencies. Both controller and compute nodes are configurable by means of simple configuration files ~\ref{sub:fakestack_conf}.\\
 FakeStack provides a set of scripts to handle node startup, service updating on live nodes and other features~\ref{sub:fakestack_scripts}.
 
 \subsection{Nodes}
@@ -144,22 +144,110 @@ As we can see in figure~\ref{fig:fakestack_tree}, nodes have two separated \text
 	\end{algorithmic}
 	\end{algorithm}
 	
+	\item[reinstall\_service.sh] This script allows the user to update a service on this node specifing its name (e.g. \texttt{nova}, \texttt{glance} and so on)
 
-	\item[reinstall\_service.sh]
-	\item[update\_quotas.sh]
+	\item[update\_quotas.sh] This script allows the user to enlarge \textit{quotas} for the \textit{tenant}\footnote{\textit{Quotas} are limits on how much CPU, memory and disk space the tenant can use. \textit{Tenant} is an OpenStack concept similar to Linux groups.} in use (in our case \texttt{admin}) to a very big amount. Its usage is justified by the fact that probably the user will spawn hundreds or thousands of virtual machines on its OpenStack nodes and, normally, standard quotas will prevent him from doing so. Enlarging quotas is an easy and fast way to allow the user not to worry about how many virtual machines he owns.
 \end{description}
 
 Once a node has been built, all of this shared scripts are copied to the file-system of the node.\\
 \texttt{local.conf} file, instead, is bound\footnote{\texttt{local.conf} is a \href{https://docs.docker.com/userguide/dockervolumes/\#data-volumes}{\textit{Data Volume}}. Basically it is a file whose modifications are visible at each container's run.} to node's file-system avoiding rebuilding at each modification.
 
-When a node is started, \texttt{cmd.sh} will run, resulting in running DevStack's \texttt{stack.sh}. It is at this moment that OpenStack's installation starts~\ref{} \todo{reference to DevStack's detailed description}.
+When a node is started, \texttt{cmd.sh} will run, resulting in running DevStack's \texttt{stack.sh}. At this very moment OpenStack's installation starts~\ref{} \todo{reference to DevStack's detailed description}.
 
 \subsection{Scripts}
 \label{sub:fakestack_scripts}
+Once a user enters FakeStack root directory he/she has to \code{source fakerc}. Executing this command, all of the scripts contained in \texttt{scripts} directory become available in \texttt{PATH}. The prefix \texttt{ftools\_} is added to avoid conflicts in names.\\
+Scripts for running and updating nodes takes leverage of Linux screens\footnote{\url{http://linux.die.net/man/1/screen}}. Screens are powerful tools to run detached shells from within another shell. This feature gives lots of advantages both in terms of ease of use and in running long running jobs via SSH.\\
+All of aDock processing is confined into two different screens, \texttt{running} and \texttt{updating}. Thanks to this, the user will not be obliged to open lots of shells, but he could use only one; keep it clean from computation and reattach to aDock screens once needed. If the user wants to run a long running task (e.g. a very long simulation or lots of different, small simulations) on a remote server via SSH, he will not need to keep the SSH session opened and wait for simulations to end; the screen session, in fact, will stay open (and so the processes within it, running) indipendently from SSH connection. 
+
+We list here and describe scripts contained into \texttt{scripts} directory.
+\begin{description}
+	\item[createbr] Input: bridge name. Creates a bridge with CIDR $42.42.0.0/24$ named as the bridge name passed as first argument by the user. This bridge is intended to be used by Docker, setting the option \code{-b <bridge\_name>} into \texttt{/etc/default/docker}. Run this script before starting the system or edit IP configuration in \texttt{cmd.sh}. In fact, \texttt{cmd.sh} will set controller's IP to the last available into that precise network ($42.42.255.254$). After running this script, Docker service has to be restarted.
+	\item[destroyall] Stops and destroys all OpenStack nodes.
+	\item[runctrl] Runs one controller node on a new window in screen \texttt{running}.
+	\item[runcmps] Input: \texttt{N}. Starts \texttt{N} compute nodes on a new window in screen \texttt{running}. It is necessary to confirm the operation in the window created. Once confirmed, a new window, attached to one of the compute nodes started, will be opened.
+	\item[screenbyname] Input: screen name. Reattachs to the screen named as given by the user, if it exists.
+	\item[updateall] Input: service name. Updates the service given by the user on all OpenStack nodes. All of the processing is performed into screen \texttt{updating}.
+\end{description}
+
+We list here and describe scripts ``sourced'' from \texttt{fakerc} (\texttt{ftools\_} convention is always maintained).
+\begin{description}
+	\item[runcmp] Alias for \code{ftools\_runcmps 1}.
+	\item[build] Input: \texttt{ctrl} or \texttt{cmp}. This script builds the node, and so, regenerates it from a pure Ubuntu image. It is necessary to run this script only in case that some of the files (apart from \texttt{local.conf}) has been modified.
+	\item[attach] Input: container ID. Attaches to a Docker container. Alias for \code{docker attach <container\_id>}.
+\end{description}
 
 \subsection{Configuration}
 \label{sub:fakestack_conf}
-using DevStack's syntax ...
+\todo{repair listings placement!}
+
+Fakestack takes leverage of the powerful configurable options of DevStack. Modifying \texttt{local.conf} files before starting a node, it is possible to change enabled services (see listing~\ref{lst:enabled_services}) and their internal configuration (see listing~\ref{lst:driver_conf}). Every service is configurable in each of its installation \textit{phases}. Configuring it is as simple as adding a \code{[[ <phase> | <config-file-name> ]]} line (e.g. \code{[[post-config|\$GLANCE\_CONF]]}) to \texttt{local.conf} file and add configuration options below. DevStack's service installation phases are \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra}\footnote{For more information see \url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}.\\
+Most important, it is possible to choose a different Git repository and Git branch for each of OpenStack's services enabled (see listing~\ref{lst:change_repo}). DevStack, in fact, install services \textit{cloning} those repositories and running \code{python setup.py install}\footnote{It is the standard way to install \textit{PyPI} packages. More information can be found at \url{https://wiki.python.org/moin/CheeseShopTutorial}}.\\
+Thanks to this important piece of configuration, a user can \textit{fork} an OpenStack project; develop its code and use its new forked repository URL in DevStack's configuration.\\
+In listing~\ref{lst:localconf_ex} we show a possible complete example of \texttt{local.conf} file for a compute node.
+
+\begin{lstlisting}[float, floatplacement=H, caption={Choose OpenStack's enabled services}, label={lst:enabled_services}, numbers=none]
+... # Other configuration options
+
+# Enables:
+# - Nova Compute
+# - Nova API
+# - Nova Network
+ENABLED_SERVICES=n-cpu,n-api,n-net
+
+... # Other configuration options
+\end{lstlisting}
+
+\begin{lstlisting}[float, floatplacement=H, caption={Internal configuration of Nova}, label={lst:driver_conf}, numbers=none]
+... # Other configuration options
+
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+compute_driver=nova.virt.fake.MyFakeDriver
+
+... # Other configuration options
+\end{lstlisting}
+
+\begin{lstlisting}[float, floatplacement=H, caption={Change repository URL}, label={lst:change_repo}, numbers=none]
+... # Other configuration options
+
+NOVA_REPO=https://github.com/me/nova.git
+NOVA_BRANCH=my-branch
+
+... # Other configuration options
+\end{lstlisting}
+
+\begin{lstlisting}[float, floatplacement=H, caption={Complete \texttt{local.conf} example for compute node}, label={lst:localconf_ex}]
+[[local|localrc]]
+FLAT_INTERFACE=eth0
+MULTI_HOST=1
+LOGFILE=/opt/stack/logs/stack.sh.log
+SCREEN_LOGDIR=$DEST/logs/screen
+
+NOVA_REPO=https://github.com/me/nova.git
+NOVA_BRANCH=my-branch
+
+DATABASE_TYPE=mysql
+
+ADMIN_PASSWORD=pwstack
+MYSQL_PASSWORD=pwstack
+RABBIT_PASSWORD=pwstack
+SERVICE_PASSWORD=pwstack
+SERVICE_TOKEN=tokenstack
+
+SERVICE_HOST=controller
+MYSQL_HOST=controller
+RABBIT_HOST=controller
+
+NOVA_VNC_ENABLED=False
+VIRT_DRIVER=fake
+
+ENABLED_SERVICES=n-cpu,n-api,n-net
+
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+compute_driver=nova.virt.fake.MyFakeDriver
+\end{lstlisting}
 
 \subsection{Example}
 \label{sub:fakestack_ex}
