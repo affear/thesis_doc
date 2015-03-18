@@ -29,7 +29,38 @@ For that reason this chapter is divided into two sections that describe the stat
 At its most basic essence, cloud computing can be seen as a means to provide developers with computation, storage, and networking resources on-demand, using virtualization techniques and the service abstraction \cite{Armbrust:2010ee}. The service abstraction makes the cloud suitable for use in a wide variety of scenarios, allowing software developers to create unique applications with very small upfront investments, both in terms of capital outlays and in terms of required technical expertise. Thanks to Cloud Computing, Internet software services have rightfully taken their place as important enablers in areas of great social importance, such as ambient assisted living \cite{Zhang:2011dq}, education \cite{Sultan:2010fd}, social networking \cite{Chard:2010eh}, and mobile applications \cite{Fernando:2013ip}.\\
 Managing a Cloud Infrastructure, however, presents many unique challenges. For example, there has been a lot of focus in the last few years on Virtual Machine Placement and Server Consolidation, given the role they play in optimizing resource utilization and energy consumption \cite{Feller:2012kf}, \cite{Goudarzi:2012gw}. Virtual Machine (VM) Placement \cite{Meng:2010im}, \cite{Xu:2010df} defines how a cloud installation decides on which physical server to create a new virtual machine, when one is requested. Server Consolidation techniques \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, on the other hand, allow a cloud provider to perform periodical run-time optimizations, for example through the live migration of VMs. The goal is always to desist from having too many under-utilized hardware resources given a specific workload, and to achieve this without compromising the quality of service that is offered to the cloud’s customers.
 
+With regard to Virtual Machine Consolidation a lot of solutions, algorithms and techniques were proposed in literature \cite{He:2012jr}, \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, all with different approaches to the problem; we decided to focus on four interesting papers described in sections \ref{sec:sota_ga}, \ref{sec:sota_holistic}, \ref{sec:sota_game_theroy} and \ref{sec:sota_mutli_agent}.
 
+\subsection{Genetic Algorithm}
+\label{sec:sota_ga}
+In the paper \textit{Toward Virtual Machine Packing Optimization Based on Genetic Algorithm} \cite{Nakada:2009in} the authors explain how they modeled the problem of Virtual Machines consolidation as a bin packing problem and how they structured a Genetic Algorithm to deal with it. A Genetic Algorithm is an heuristic algorithm a type of techniques that are often used to address NP-hard problems as the bin packing problem. A GA is a model of machine learning that takes inspiration from the concept of evolution observed in biological environment from which it borrows a lot of terms such as Chromosome, Mutation or Population.\\
+The paper in question defines the concepts of a Genetic Algorithm for the Virtual Machine packing problem as follows:
+\begin{itemize}
+  \item[Chromosome] It represents a physical node, and in particular the list of hosted virtual machines.
+  \item[Crossover] They used a One-Point Crossover that randomly cut two chromosomes and mix them. They implemented a repair function to fix the inconsistent children thus obtained.
+  \item[Mutation] They randomly exchange two position between them.
+  \item[Initial Population Generation] They generate the initial population using a Minimal Generation Gap method.
+  \item[Objecive Function] The unspecified objective function is said to be designed with some parameters and weights in mind such as SLA (Service level agreement) violations, number of active nodes and number of migrations applied.
+\end{itemize}
+
+\subsection{Holistic Approach}
+\label{sec:sota_holistic}
+\cite{Feller:2012kf}
+
+\subsection{Game Theory Approach}
+\label{sec:sota_game_theroy}
+\cite{Xu:2014do}
+
+\subsection{Multi-agent Virtual Machine Management}
+\label{sec:sota_mutli_agent}
+\cite{Anderson:2013bh}
+
+
+OpenStack, at the state of the art, provides a comprehensive and efficient Virtual Machines Placement system found, as described in chapter \ref{chap:openstack_devstack} \todo{inserire la sezione giusta}, in the \code{nova-scheduler} module; however, with regard to Virtual Machines Consolidation, OpenStack doesn't include any official solution or plans to include it. 
+
+\subsection{Neat}
+\label{sec:sota_neat}
+\cite{beloglazov2014openstack}
 
 
 % -------------------------------------------------------------------------- %
