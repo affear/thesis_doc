@@ -289,7 +289,7 @@ Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's comm
 
 \section{Oscard}
 \label{sec:oscard}
-Oscard is the aDock module which takes care of running simulations against one or more OpenStack systems and collect data output from them. Oscard has two principal components, a server and a client one (see \ref{sub:oscard_internals}). The two components don't need to be used on the same machine. It is for these reason that Oscard's dockerized version runs only the server part and waits for requests from the client.
+Oscard\footnote{\url{https://github.com/affear/oscard}} is the aDock module which takes care of running simulations against one or more OpenStack systems and collect data output from them. Oscard has two principal components, a server and a client one (see \ref{sub:oscard_internals}). The two components don't need to be used on the same machine. It is for these reason that Oscard's dockerized version runs only the server part and waits for requests from the client.
 
 The client part is the one that actually runs simulations. A user can configure a simulation in terms of number of steps, command weights and more and run it using the script provided.
 
@@ -323,7 +323,7 @@ Oscard is composed of few modules (see figure \ref{fig:oscard_tree}), in this se
 
 	\code{FakeAPI} class, mimics \code{NovaAPI}'s behavior but it doesn't involve an OpenStack controller. It was developed only for testing purpose.
 	\item[oscard.sim.collector] This module exposes \code{BifrostAPI} class, which gives the APIs to interact with the Firebase backend for data storage. An instance of it is obtained in \code{oscard.sim.run} module and it is used to store the data obtained during the simulation.
-	\item[oscard.sim.proxy] This module contains the API to communicate with the proxy, \code{ProxyAPI}. The class, basically, mirrors every method contained in \code{oscard.sim.api.NovaAPI}. A \code{NovaAPI} object is obtained at module startup and each of the calls to proxy's methods is \textit{delegated} to it. It is this module that, if run from module \code{\_\_main\_\_}, starts a WSGI server (powered by Bottle\footnote{\url{}}) and waits for GET and POST requests.
+	\item[oscard.sim.proxy] This module contains the API to communicate with the proxy, \code{ProxyAPI}. The class, basically, mirrors every method contained in \code{oscard.sim.api.NovaAPI}. A \code{NovaAPI} object is obtained at module startup and each of the calls to proxy's methods is \textit{delegated} to it. It is this module that, if run from module \code{\_\_main\_\_}, starts a WSGI server (powered by Bottle\footnote{\url{http://bottlepy.org/docs/dev/index.html}}) and waits for GET and POST requests.
 	\item[oscard.randomizer] This module is a wrapper for python's \code{random} module. It provides \code{get\_randomizer} function which returns a new \code{random.Random} object initialized with the same seed as specified in \texttt{oscard.conf}.
 \end{description}
 
@@ -378,10 +378,13 @@ As an example of Oscard functioning, we show in figure~\ref{fig:oscard_functioni
 
 \section{Other Components}
 \label{sec:others}
-At this point, only two elements are missing, aDock's database and view. These roles are covered by the last two modules of aDock, respectively Bifrost and Polyphemus.
+The last two components of aDock take care of its database and view. These two roles are covered respectively by Bifrost and Polyphemus.
 
 \subsection{Bifrost}
 \label{sub:bifrost}
+Bifrost\footnote{\url{https://bifrost.firebaseio.com/}} is the name for the Firebase application delegated to store simulation data output. Firebase uses a non-relational JSON database. The whole aDock database is thus a JSON structure that is exportable in a \texttt{.json} file. Firebase provides a JavaScript and a python SDK and it natively supports real-time notifications on data change (only for JavaScript SDK). We decided to use this backend type because of its SDKs; for the portability of \texttt{.json} format; for the advantages of dealing with a non-relational database when data is very mutable (especially while developing); because performance is not needed in our case and because of its cloud nature. It is important that Firebase, by design, doesn't offer a great support for concurrent calls\footnote{\url{https://www.firebase.com/docs/web/guide/saving-data.html\#section-transactions}}, so, our simulations \textit{cannot} run concurrently\footnote{The same simulation can be run concurrently on more hosts, but two simulations cannot be run concurrently on different hosts.}.
+
+Firebase offers a good dashboard (see \ref{fig:firebase_dash}) that updates in real-time (if the amount of data is not too big) and allows the user to perform CRUD\footnote{Create Read Update Delete} operations on data. 
 
 \begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/firebase_dash.png}}
@@ -391,6 +394,9 @@ At this point, only two elements are missing, aDock's database and view. These r
 
 \subsection{Polyphemus}
 \label{sub:polyphemus}
+Polyphems\footnote{\url{https://github.com/affear/polyphemus}} is the Polymer\footnote{\url{https://www.polymer-project.org/0.5/}}-powered view of aDock. It can be run in a Docker container or not\footnote{Dockerized version is recommended, because it allows the user not to install all Polyphemus' dependencies such as \texttt{NodeJS} before running}. Its aim is to show data to the user in a friendly way. Polyphemus shows each simulation snapshot in terms of overall average of resources usage\footnote{The average of the percentage of vCPUs, memory and disk used calculated on all active compute nodes (nodes that are hosting at least one instance).} through line charts and percentage of resources usage\footnote{The percentage of vCPUs, memory and disk.} for each compute node through bar charts. A tool-bar representing data aggregates\footnote{The average of all averages of resources usage calculated on the number of simulation steps executed.} for each host is always visible on the top. It shows charts for each of the hosts on which the current simulation is running, giving the possibility to make comparisons intuitively. Moreover it includes more information such as the architecture of each OpenStack system running on each host; active services and simulation progress.
+
+Every information displayed by Polyphemus is updated in \textit{real-time}. In figure \ref{fig:poly}, we provide a sample screen shot of Polyphemus. 
 
 \begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/poly.png}}
