@@ -48,7 +48,32 @@ The experimentation environment and the simulations tests are not described in a
 
 \subsection{Holistic Approach}
 \label{sec:sota_holistic}
-\cite{Feller:2012kf}
+The paper \textit{Energy Management in IaaS Clouds: A Holistic Approach} published during the Fifth International Conference on Cloud Computing of IEEE in 2012 presents the energy management algorithms and mechanisms of  holistic energy-aware Virtual Machines management framework for private clouds called Snooze.\\
+The system architecture described by the authors (see figure \ref{fig:snooze_arch} on page \pageref{fig:snooze_arch}) is divided in three layers:
+\begin{description}
+  \item[Physical layer] It contains clusters of nodes each of them controlled by a Local Controller (LCs).
+    \begin{itemize}
+      \item \textit{Local Controller} - They enforce Virtual Machines and host management commands coming from the GM. Moreover, they monitor VMs, detect overload/underload anomaly situations and report them to the assigned GM.
+    \end{itemize}
+  \item[Hierarchical layer] It allows to scale the system and is composed of fault-tolerant components: Group Managers (GMs) and a Group Leader (GL).
+      \begin{itemize}
+      \item \textit{Group Leader} - One GL oversees the GMs, keeps aggregated GM resource summary information, assigns LCs to GMs, and dispatches VM submission requests to the GM.
+      \item \textit{Group Managers} - Each of them manages a subset of physical hosts retrieving their resource information and sending commands, received by the GL, to the LCs.
+      \end{itemize}
+  \item[Client layer] It provides the user interface and it is implemented by a predefined number of replicated Entry Points (EPs).
+\end{description}
+
+The system addresses the scheduling problem both at GL level, where VM to GM dispatching is done based on the GM resource summary information in a round-robin way, and GM level where the real scheduling decisions are made. In addition to the \textit{placement policies}, applied when a new VM is requested, are present \textit{relocation policies}, called when overload or underload events arrive from LCs, and \textit{consolidation policies}, called periodically according to the system administrator specified interval.\\
+The paper proposes an algorithm for both overload and underload relocation policy. They both take as input the overloaded/underloaded LC along with its associated VMs and a list of LCs managed by the GM and output a Migration Plan (MP) which specifies the new VM locations.\\
+The algorithm proposed for the consolidation follows an all-or-nothing approach and attempts to move VMs from the least loaded LC to a non-empty LC with enough spare capacity.  LCs are first sorted in decreasing order based on their estimated utilization. Afterwards, VMs from the least loaded LC are sorted in decreasing order, placed on the LCs starting from the most loaded one and added to the migration plan. If all VMs could be placed the algorithm increments the number of released nodes and continues with the next LC. Otherwise, all placed VMs are removed from the LC and MP and the procedure is repeated with the next loaded LC. The algorithm terminates when it has reached the most loaded LC and outputs the MP, number of used nodes, and number of released nodes\cite[p.~208]{Feller:2012kf}.\\
+In section \todo{sezione..} we describe how we implemented this algorithm in our system and the result obtained with our configuration.
+
+
+\begin{figure}[!ht]
+\centering{\includegraphics[width=\texthalfwidth]{images/snooze_arch.png}}
+\label{fig:snooze_arch}
+\caption{The Snooze architecture \cite{Feller:2012kf}}
+\end{figure}
 
 \subsection{Game Theory Approach}
 \label{sec:sota_game_theroy}
