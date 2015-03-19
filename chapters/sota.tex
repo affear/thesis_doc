@@ -27,25 +27,53 @@ For that reason this chapter is divided into two sections that describe the stat
 \label{sec:sota_vm_cons}
 
 At its most basic essence, cloud computing can be seen as a means to provide developers with computation, storage, and networking resources on-demand, using virtualization techniques and the service abstraction \cite{Armbrust:2010ee}. The service abstraction makes the cloud suitable for use in a wide variety of scenarios, allowing software developers to create unique applications with very small upfront investments, both in terms of capital outlays and in terms of required technical expertise. Thanks to Cloud Computing, Internet software services have rightfully taken their place as important enablers in areas of great social importance, such as ambient assisted living \cite{Zhang:2011dq}, education \cite{Sultan:2010fd}, social networking \cite{Chard:2010eh}, and mobile applications \cite{Fernando:2013ip}.\\
-Managing a Cloud Infrastructure, however, presents many unique challenges. For example, there has been a lot of focus in the last few years on Virtual Machine Placement and Server Consolidation, given the role they play in optimizing resource utilization and energy consumption \cite{Feller:2012kf}, \cite{Goudarzi:2012gw}. Virtual Machine (VM) Placement \cite{Meng:2010im}, \cite{Xu:2010df} defines how a cloud installation decides on which physical server to create a new virtual machine, when one is requested. Server Consolidation techniques \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, on the other hand, allow a cloud provider to perform periodical run-time optimizations, for example through the live migration of VMs. The goal is always to desist from having too many under-utilized hardware resources given a specific workload, and to achieve this without compromising the quality of service that is offered to the cloud’s customers.
+Managing a Cloud Infrastructure, however, presents many unique challenges. For example, there has been a lot of focus in the last few years on Virtual Machine Placement and Server Consolidation, given the role they play in optimizing resource utilization and energy consumption \cite{Feller:2012kf}, \cite{Goudarzi:2012gw}. Virtual Machine (VM) Placement \cite{Meng:2010im}, \cite{Xu:2010df} defines how a cloud installation decides on which physical server to create a new virtual machine, when one is requested. Server Consolidation techniques \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, on the other hand, allow a cloud provider to perform periodical run-time optimizations, for example through the live migration of VMs. The goal is always to desist from having too many under-utilized hardware resources given a specific workload, and to achieve this without compromising the quality of service that is offered to the cloud’s customers.\\
+Dynamic consolidation of Virtual machines is enabled by \textit{live migration}that is the capability of moving a running Virtual Machine between two physical hosts with no downtime and no disruptions for the user. Thanks to dynamic Virtual Machines consolidation is therefore possible to live migrate Virtual Machines from underutilized hosts to minimize the number of active hosts and remove Virtual Machines from hosts when those become overloaded to avoid performance degradation.
 
-With regard to Virtual Machine Consolidation a lot of solutions, algorithms and techniques were proposed in literature \cite{He:2012jr}, \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, all with different approaches to the problem; we decided to focus on four interesting papers described in sections \ref{sec:sota_ga}, \ref{sec:sota_holistic}, \ref{sec:sota_game_theroy} and \ref{sec:sota_mutli_agent}.
+With regard to Virtual Machine Consolidation a lot of solutions, algorithms and techniques were proposed in literature \cite{He:2012jr}, \cite{Wuhib:2012vq}, \cite{Corradi:2014fe}, all with different approaches to the problem; we decided to focus on four interesting papers described in sections \ref{sec:sota_ga}, \ref{sec:sota_holistic}, \ref{sec:sota_game_theroy} and \ref{sec:sota_mutli_agent}. The section \ref{sec:sota_neat} is dedicated to the only attempted at the state of the art to apply Virtual Machine consolidation in the OpenStack world.
 
 \subsection{Genetic Algorithm}
 \label{sec:sota_ga}
 In the paper \textit{Toward Virtual Machine Packing Optimization Based on Genetic Algorithm} \cite{Nakada:2009in} the authors explain how they modeled the problem of Virtual Machines consolidation as a bin packing problem and how they structured a Genetic Algorithm to deal with it. A Genetic Algorithm is an heuristic algorithm a type of techniques that are often used to address NP-hard problems as the bin packing problem. A GA is a model of machine learning that takes inspiration from the concept of evolution observed in biological environment from which it borrows a lot of terms such as Chromosome, Mutation or Population.\\
 The paper in question defines the concepts of a Genetic Algorithm for the Virtual Machine packing problem as follows:
-\begin{itemize}
+\begin{description}
   \item[Chromosome] It represents a physical node, and in particular the list of hosted virtual machines.
   \item[Crossover] They used a One-Point Crossover that randomly cut two chromosomes and mix them. They implemented a repair function to fix the inconsistent children thus obtained.
   \item[Mutation] They randomly exchange two position between them.
   \item[Initial Population Generation] They generate the initial population using a Minimal Generation Gap method.
   \item[Objecive Function] The unspecified objective function is said to be designed with some parameters and weights in mind such as SLA (Service level agreement) violations, number of active nodes and number of migrations applied.
-\end{itemize}
+\end{description}
+
+The experimentation environment and the simulations tests are not described in a detailed way and there are no data results to prove the goodness of the approach. Still the idea of implementing a Genetic Algorithm to solve the consolidation problem is interesting and possibly very efficient and useful; for this reasons we decided to take inspiration from it and implement a Genetic Algorithm, to be applied in an OpenStack test environment deployed with aDock, as described in section \todo{aggiungere riferimento}.
 
 \subsection{Holistic Approach}
 \label{sec:sota_holistic}
-\cite{Feller:2012kf}
+The paper \textit{Energy Management in IaaS Clouds: A Holistic Approach} published during the Fifth International Conference on Cloud Computing of IEEE in 2012 presents the energy management algorithms and mechanisms of  holistic energy-aware Virtual Machines management framework for private clouds called Snooze.\\
+The system architecture described by the authors (see figure \ref{fig:snooze_arch} on page \pageref{fig:snooze_arch}) is divided in three layers:
+\begin{description}
+  \item[Physical layer] It contains clusters of nodes each of them controlled by a Local Controller (LCs).
+    \begin{itemize}
+      \item \textit{Local Controller} - They enforce Virtual Machines and host management commands coming from the GM. Moreover, they monitor VMs, detect overload/underload anomaly situations and report them to the assigned GM.
+    \end{itemize}
+  \item[Hierarchical layer] It allows to scale the system and is composed of fault-tolerant components: Group Managers (GMs) and a Group Leader (GL).
+      \begin{itemize}
+      \item \textit{Group Leader} - One GL oversees the GMs, keeps aggregated GM resource summary information, assigns LCs to GMs, and dispatches VM submission requests to the GM.
+      \item \textit{Group Managers} - Each of them manages a subset of physical hosts retrieving their resource information and sending commands, received by the GL, to the LCs.
+      \end{itemize}
+  \item[Client layer] It provides the user interface and it is implemented by a predefined number of replicated Entry Points (EPs).
+\end{description}
+
+The system addresses the scheduling problem both at GL level, where VM to GM dispatching is done based on the GM resource summary information in a round-robin way, and GM level where the real scheduling decisions are made. In addition to the \textit{placement policies}, applied when a new VM is requested, are present \textit{relocation policies}, called when overload or underload events arrive from LCs, and \textit{consolidation policies}, called periodically according to the system administrator specified interval.\\
+The paper proposes an algorithm for both overload and underload relocation policy. They both take as input the overloaded/underloaded LC along with its associated VMs and a list of LCs managed by the GM and output a Migration Plan (MP) which specifies the new VM locations.\\
+The algorithm proposed for the consolidation follows an all-or-nothing approach and attempts to move VMs from the least loaded LC to a non-empty LC with enough spare capacity.  LCs are first sorted in decreasing order based on their estimated utilization. Afterwards, VMs from the least loaded LC are sorted in decreasing order, placed on the LCs starting from the most loaded one and added to the migration plan. If all VMs could be placed the algorithm increments the number of released nodes and continues with the next LC. Otherwise, all placed VMs are removed from the LC and MP and the procedure is repeated with the next loaded LC. The algorithm terminates when it has reached the most loaded LC and outputs the MP, number of used nodes, and number of released nodes\cite[p.~208]{Feller:2012kf}.\\
+In section \todo{sezione..} we describe how we implemented this algorithm in our system and the result obtained with our configuration.
+
+
+\begin{figure}[!ht]
+\centering{\includegraphics[width=\texthalfwidth]{images/snooze_arch.png}}
+\label{fig:snooze_arch}
+\caption{The Snooze architecture \cite{Feller:2012kf}}
+\end{figure}
 
 \subsection{Game Theory Approach}
 \label{sec:sota_game_theroy}
@@ -55,12 +83,26 @@ The paper in question defines the concepts of a Genetic Algorithm for the Virtua
 \label{sec:sota_mutli_agent}
 \cite{Anderson:2013bh}
 
-
-OpenStack, at the state of the art, provides a comprehensive and efficient Virtual Machines Placement system found, as described in chapter \ref{chap:openstack_devstack} \todo{inserire la sezione giusta}, in the \code{nova-scheduler} module; however, with regard to Virtual Machines Consolidation, OpenStack doesn't include any official solution or plans to include it. 
-
 \subsection{Neat}
 \label{sec:sota_neat}
-\cite{beloglazov2014openstack}
+OpenStack, at the state of the art, provides a comprehensive and efficient Virtual Machines Placement system found, as described in chapter \ref{chap:openstack_devstack} \todo{inserire la sezione giusta}, in the \code{nova-scheduler} module; however, with regard to Virtual Machines Consolidation, OpenStack doesn't include any official solution or plans to include it.\\
+The only project that tried to bring the Virtual Machine consolidation concepts to OpenStack is Neat\footnote{\url{github.com/beloglazov/openstack-neat}}, it is defined as a framework for dynamic and energy-efficient consolidation of virtual machines in OpenStack clouds \cite{beloglazov2014openstack}.\\
+OpenStack Neat approaches the consolidation problem splitting it in four sub-problems~\cite[p.~3]{beloglazov2014openstack}:
+\begin{itemize}
+  \item  Deciding if a host is considered to be \textit{underloaded}, so that all Virtual Machines should be migrated from it, and the host should be switched to a low-power mode. 
+  \item Deciding if a host is considered to be \textit{overloaded}, so that some Virtual Machines should be migrated from it to other active or reactivated hosts to avoid violating the QoS requirements.
+  \item Selecting  Virtual Machines to migrate from an overloaded host.
+  \item Placing  Virtual Machines selected for migration on other active or reactivated hosts.
+\end{itemize}
+
+\begin{figure}[!ht]
+\centering{\includegraphics[width=\textwidth]{images/neat_arch.png}}
+\label{fig:neat_arch}
+\caption{The OpenStack Neat architecture \cite{beloglazov2014openstack}}
+\end{figure}
+
+In figure \ref{fig:neat_arch}~\cite[p.~7]{beloglazov2014openstack} it is represented the architecture of OpenStack Neat: it is mainly composed by a \textit{Global Manager} installed on the Controller node, a \textit{Local Manager}  and a \textit{Data Collector} both installed on every Compute node. The \textit{Global Manager} is responsible for making global management decisions such as mapping Virtual Machines instances to hosts, and initiating Virtual Machines live migrations; the \textit{Local Manager} makes instead local decisions such as deciding that the host is underloaded or overloaded and selecting Virtual Machines to migrate to other hosts; lastly the \textit{Data Collector}  is responsible for collecting data on the resource usage by Virtual Machines instances and hypervisors and then storing the data locally and submitting it to the central database, which can also be distributed.\\
+One of the main characteristics of OpenStack Neat is that it is designed to be distributed and external to OpenStack, in fact it acts independently of the base OpenStack platform and applies Virtual Machines consolidation processes by invoking public APIs of OpenStack. For that reason it has to be installed separately from OpenStack, following the limited instructions present on the GitHub page of the project\footnote{\url{github.com/beloglazov/openstack-neat}} and can not take advantage of tools like DevStack (see \ref{chap:openstack_devstack} on page \pageref{chap:openstack_devstack}) that automates the deploy and configuration of an OpenStack installation. \\
 
 
 % -------------------------------------------------------------------------- %
