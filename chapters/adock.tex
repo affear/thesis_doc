@@ -289,11 +289,17 @@ Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's comm
 
 \section{Oscard}
 \label{sec:oscard}
-% high level description
+Oscard is the aDock module which takes care of running simulations against one or more OpenStack systems and collect data output from them. Oscard has two principal components, a server and a client one (see \ref{sub:oscard_internals}). The two components don't need to be used on the same machine. It is for these reason that Oscard's dockerized version runs only the server part and waits for requests from the client.
+
+The client part is the one that actually runs simulations. A user can configure a simulation in terms of number of steps, command weights and more and run it using the script provided.
+
+The server part is the \textit{Proxy}, it litterally waits for client requests and forwards them to OpenStack's controller node.
+
+Oscard is completely configurable from \texttt{oscard.conf} file.
 
 \subsection{Modules}
 \label{sub:oscard_modules}
-% describe each module
+Oscard is composed of few modules (see figure \ref{fig:oscard_tree}), in this section we will explain in detail what each of them is up to.
 
 \begin{figure}[!ht]
 \centering{\includegraphics{images/oscard_tree.png}}
@@ -302,17 +308,69 @@ Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's comm
 \end{figure}
 
 \begin{description}
-	\item[oscard.sim.api]
-	\item[oscard.sim.collector]
-	\item[oscard.sim.proxy]
-	\item[oscard.randomizer]
+	\item[oscard.sim.api] This module contains the APIs to interact with OpenStack's Nova.
+	It mainly contains two classes, \code{NovaAPI} and \code{FakeAPI}. \code{NovaAPI} provides methods necessary to perform basic operations on Nova using OpenStack's official python clients: \code{keystoneclient.v2\_0} and \code{novaclient.v1\_1}.
+
+		\begin{itemize}
+			\item \code{init}: resets APIs random seed. If the option \texttt{random\_seed} has been modified into \texttt{oscard.conf}, the new seed will be reloaded as well.
+			\item \code{architecture}: Returns system's architecture in terms of compute nodes and their resources (vCPUs, memory and disk).
+			\item \code{active\_services}: Returns active service and their number. For instance, if there are $10$ compute nodes, it is very common to have $10$ \texttt{nova-compute} services up. In this case, only one \texttt{nova-compute} service with count $10$ will be returned.
+			\item \code{snapshot}: Returns a snapshot of the system. The snapshot contains data about each compute node in use (a node which is hosting virtual machines), such as resources in use, and aggregate data about all active nodes (averages of resources usage). 
+			\item \code{create}: Spawns an instance of random flavor and returns its ID.
+			\item \code{resize}: Resizes a random active instance to a random flavor (different from its actual one) and returns its ID.
+			\item \code{destroy}: Deletes a random instance.
+		\end{itemize}
+
+	\code{FakeAPI} class, mimics \code{NovaAPI}'s behavior but it doesn't involve an OpenStack controller. It was developed only for testing purpose.
+	\item[oscard.sim.collector] This module exposes \code{BifrostAPI} class, which gives the APIs to interact with the Firebase backend for data storage. An instance of it is obtained in \code{oscard.sim.run} module and it is used to store the data obtained during the simulation.
+	\item[oscard.sim.proxy] This module contains the API to communicate with the proxy, \code{ProxyAPI}. The class, basically, mirrors every method contained in \code{oscard.sim.api.NovaAPI}. A \code{NovaAPI} object is obtained at module startup and each of the calls to proxy's methods is \textit{delegated} to it. It is this module that, if run from module \code{\_\_main\_\_}, starts a WSGI server (powered by Bottle\footnote{\url{}}) and waits for GET and POST requests.
+	\item[oscard.randomizer] This module is a wrapper for python's \code{random} module. It provides \code{get\_randomizer} function which returns a new \code{random.Random} object initialized with the same seed as specified in \texttt{oscard.conf}.
 \end{description}
 
 \subsection{Oscard Internals}
 \label{sub:oscard_internals}
-% when we start oscard container the script ./bin/run_proxy is run
+\newcommand{\osconf}[1]{\footnote{In \texttt{oscard.conf}: \texttt{#1}}}
 
-\todo{figure of oscard functioning}
+In this section we will describe in detail Oscard internal working and its possible configuration options (specified in footnotes, when necessary). We will also clarify some of the concepts (such as pseudo-randomness) about simulations.
+
+Each random-taken decision in Oscard is taken using a randomizer obtained through \code{oscard.randomizer.get\_randomizer}. Each time we get a randomizer, it is initialized with a seed taken by configuration file\osconf{random\_seed} or, in case it is not specified, directly from Bifrost's last simulation ID. The seed used is equivalent to the simulation ID that the user wants to execute. It is for this reason that every random-taken decision can be repeatable simply setting the seed from configuration file.
+
+Every simulation is composed of a precise number of commands\osconf{no\_t} run in sequence. Each command is executed at a precise step which is a discrete instant in time. Available commands (up to now) are \textit{create}, \textit{resize}, \textit{destroy} and \textit{NOP}. First three commands are clear in their intent, the last one, \textit{NOP} command, is a ``no operation'' command. It is meant to make simulations more realistic in the sense that, in reality, it is impossible that at each time instant the system is asked to perform a CRD\footnote{Create Resize Destroy} operation. \textit{NOP} operation simulates the fact that the system could be idle (in term of requests from users) in some moments. ``No operation''s allow us to change operation \textit{density} along time.
+
+At each step, Oscard chooses a command at random and executes it. Commands can have different weights\osconf{<command-name>\_w} that influence their probability to be chosen. Each command is executed \textit{when and only when} the command before has been completed (with success or not), thus, the state of the machine interested in the operation, can be one of \texttt{ACTIVE} or \texttt{ERROR}\footnote{Two of possible instance states in OpenStack. See \url{http://docs.openstack.org/developer/nova/devref/vmstates.html}} and not an intermediate one. Because of this reason and because Oscard is single-threaded, we can say that Oscard's simulations are run \textit{serially}. This fact is important, because in conjunction with pseudo-randomness, it ensures \textit{simulation repeatability}. At least, for what concerns Oscard itself: the system, in fact, is built to run repeatable simulations, but we cannot guarantee that OpenStack system will always take the same decisions. Thus, two simulation outputs could be different even if simulations are, for Oscard, the same one.
+
+As already said, Oscard is composed of two parts, the server and the client one. Oscard's proxy (the server part) can be run both as a Docker container or running \code{./bin/run\_proxy} from a shell\footnote{Dockerized version is recommended, because it allows the user not to install all Oscard's dependencies before running}. Oscard, as FakeStack, has a source file called \texttt{oscardrc}. Once the user runs \code{source oscardrc}, \code{run\_oscard} script is available in \texttt{PATH}, this script can be used to start Oscard's container.
+
+Oscard is highly configurable, but it is important to note that each option has a default value (see \url{https://github.com/affear/oscard/blob/master/oscard.sample.conf}). So, it is not needed to configure each Oscard option before starting it. Some options are relevant only for server, others for client and some for both of them. We list their meaning and split them between the two Oscard components to better understand their working.
+
+The server part can be configured in terms of:
+\begin{itemize}
+	\item \texttt{proxy\_port}: sets the port on which Oscard's proxy will listen on.
+	\item \texttt{os\_username}, \texttt{os\_tenant}, \texttt{os\_password}: access credentials for the user used in OpenStack.
+	\item \texttt{fake}: if set to \code{True}, \code{FakeAPI} will be used.
+	\item \texttt{fb\_backend}: it's the Firebase backend URL.
+	\item \texttt{random\_seed}: the seed that \code{NovaAPI} will use to choose random instances and random flavors. Set this parameter to the ID of the simulation that needs to be run.
+\end{itemize}
+
+The client part can be configured in terms of:
+\begin{itemize}
+	\item \texttt{fb\_backend}: as above.
+	\item \texttt{random\_seed}: as above.
+	\item \texttt{no\_t}: the number of steps for the simulation.
+	\item \texttt{create\_w}, \texttt{resize\_w}, \texttt{delete\_w}, \texttt{nop\_w}: weights for commands.
+	\item \texttt{proxy\_hosts}: the URLs for the proxies on which the simulation will be run concurrently (e.g. \texttt{host1.example.com:3000,host2.example.com:80}). Oscard, in fact, can run the same simulation concurrently on more than one host (if real-time comparisons are needed).
+\end{itemize}
+
+As an example of Oscard functioning, we show in figure~\ref{fig:oscard_functioning}, by means of a sequence diagram, the workflow of a \texttt{create} operation. 
+
+\todo{sequence diagram of create op}
+
+% sequence diagram
+\begin{figure}[!ht]
+\centering{\includegraphics{images/oscard_functioning.png}}
+\label{fig:oscard_functioning}
+\caption{Workflow for a \texttt{create} operation}
+\end{figure}
 
 % --------------------------------------------------------------------------- %
 % --------------------------- BIFROST + POLYPHEMUS -------------------------- %
@@ -320,7 +378,22 @@ Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's comm
 
 \section{Other Components}
 \label{sec:others}
-% will be very small
+At this point, only two elements are missing, aDock's database and view. These roles are covered by the last two modules of aDock, respectively Bifrost and Polyphemus.
 
-\todo{screenshot of bifrost dashboard}
-\todo{screenshot of polyphemus}
+\subsection{Bifrost}
+\label{sub:bifrost}
+
+\begin{figure}[H]
+\centering{\includegraphics[width=\textwidth]{images/firebase_dash.png}}
+\label{fig:firebase_dash}
+\caption{Firebase Dashboard}
+\end{figure}
+
+\subsection{Polyphemus}
+\label{sub:polyphemus}
+
+\begin{figure}[H]
+\centering{\includegraphics[width=\textwidth]{images/poly.png}}
+\label{fig:poly}
+\caption{Screenshot of Polyphemus}
+\end{figure}
