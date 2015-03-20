@@ -348,6 +348,7 @@ The server part can be configured in terms of:
 	\item \texttt{proxy\_port}: sets the port on which Oscard's proxy will listen on.
 	\item \texttt{os\_username}, \texttt{os\_tenant}, \texttt{os\_password}: access credentials for the user used in OpenStack.
 	\item \texttt{fake}: if set to \code{True}, \code{FakeAPI} will be used.
+	\item \texttt{ctrl\_host}: the IP of the docker container running controller node.
 	\item \texttt{fb\_backend}: it's the Firebase backend URL.
 	\item \texttt{random\_seed}: the seed that \code{NovaAPI} will use to choose random instances and random flavors. Set this parameter to the ID of the simulation that needs to be run.
 \end{itemize}
@@ -401,5 +402,17 @@ Every information displayed by Polyphemus is updated in \textit{real-time}. In f
 \begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/poly.png}}
 \label{fig:poly}
+\caption{Screenshot of Polyphemus}
+\end{figure}
+
+\section{aDock's Architecture}
+\label{sec:adock_arch}
+aDock is a modular system, where each component is run in its dockerized version\footnote{Apart from Bifrost.}. In figure \ref{fig:adock_arch}, a sample aDock architecture is shown.
+
+The simulation is started from a normal laptop using Oscard. Oscard client contacts Oscard proxies on each of the hosts (specified in \texttt{proxy\_hosts}) using the endpoints exposed, each endpoint identifies a different command to be executed. For each host, Oscard proxy uses \code{NovaAPI} to ``send'' the command to controller node (whose IP is specified in \texttt{ctrl\_host}) which, in turn, will handle it. For each host and at each step, the proxy collects data from the controller using \code{NovaAPI} methods and stores it into Bifrost using \code{BifrostAPI}. Data is available and can be consulted connecting to Polyphemus\footnote{Polyphemus container can be started everywhere, not only on one of the hosts.} using a web browser on user's laptop.  
+
+\begin{figure}[H]
+\centering{\includegraphics[width=\textwidth]{images/adock_arch.png}}
+\label{fig:adock_arch}
 \caption{Screenshot of Polyphemus}
 \end{figure}
