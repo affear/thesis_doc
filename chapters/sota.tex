@@ -77,11 +77,26 @@ In section \todo{sezione..} we describe how we implemented this algorithm in our
 
 \subsection{Game Theory Approach}
 \label{sec:sota_game_theroy}
-\cite{Xu:2014do}
+The paper \textit{A Game Theory Approach to Fair and Efficient Resource Allocation in Cloud Computing} proposes a game theoretic resources allocation algorithm that considers the fairness among users and the resources utilization for both \cite{Xu:2014do}.\\
+The four main components of the proposed cloud resource management system are:
+\begin{description}
+  \item[CEM - Cloud Environments Monitor] This component retrieves information like host names, IP addresses about physical servers, monitors their statuses (starting, running, shutdown) and the consumption of CPU, memory, and disk storage.
+  \item[RC - Register Center] Every physical server in cloud data center should register its information to RC for connection and management.
+  \item[IM - Infrastructure Manager] It is responsible for deploying and managing the virtualized infrastructures, such as creating and releasing virtual machines.
+  \item[CC - Control Center] It is the computing center to provide the most appropriate decision about resource allocating.
+\end{description}
+
+CEM is monitoring the statuses and resource consumptions for physical servers registered in RC. Once a new physical server started to join the cloud, the information like MAC address, IP address will be registered to RC. When a user sends a service request to cloud, the requirements of resources in this request will be received by CC. CC makes an intelligent resource allocation decision based on the information collected by CEM. The allocation decision is executed by IM to manage the physical servers and place the virtual machines.\cite[p.~3]{Xu:2014do}
+
+They experiment a FUGA (Fairness-Utilization tradeoff Game Algorithm) on a server cluster composed by 8 nodes and show that it make it possible to achieve an optimal tradeoff between fairness and efficiency compared with the evaluation of the Hadoop\footnote{A framework that allows for the distributed processing of large data sets across clusters of computers using simple programming models. \url{http://hadoop.apache.org}} scheduler.
 
 \subsection{Multi-agent Virtual Machine Management}
 \label{sec:sota_mutli_agent}
-\cite{Anderson:2013bh}
+The solution presented in the paper \textit{Multi-agent Virtual Machine Management Using the Lightweight Coordination Calculus} is based on an LCC system that specify the migration behaviour of Virtual Machines within, and between cloud environments. LCC is a Lightweight Coordination Calculus which can be used to provide an executable, declarative specification of an agent interaction model\cite{Anderson:2013bh}.
+
+The proposed system is a distributed between nodes and so doesn't have a central controller that could represent a single point of failure or a bottleneck: agents located on the physical machines negotiate to transfer VMs between themselves, without reference to any centralized authority\cite[p.~124]{Anderson:2013bh}.
+
+The framework designed by the authors provides different types of interaction models by which it is possible to implement a wide range of algorithms and policies to support several different situations.
 
 \subsection{Neat}
 \label{sec:sota_neat}
@@ -122,7 +137,7 @@ Below we are presenting them highlighting their main features and their strength
 Vagrant\footnote{\url{www.vagrantup.com}} is a virtualization framework for creating, configuring and managing development environments, written in Ruby, that allows to  virtual development environments. It is a wrapper around virtualization software such as VirtualBox, KVM, VMware and could be used together with configuration management tools such as Chef and Puppet.
 Thanks to an online repository \footnote{\url{www.vagrantcloud.com}} it is possible to automatically download a Vagrant Box and run it with a single command: \code{vagrant up vagrant-box-name}.
 It is also possible to create and configure custom Vagrant Box by simply writing a Vagrantfile:
-\begin{lstlisting}[language=Ruby]
+\begin{lstlisting}[language=Ruby,numbers=none]
 box      = 'trusty64'
 url      = 'http://files.vagrantup.com/precise32.box'
 hostname = 'customtrustybox'
@@ -167,7 +182,7 @@ In this situation you can achieve a ``1 + N'' configuration that is one OpenStac
 Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services are installed on a single node.\\
 These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a Vagrantfile that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
 
-\begin{lstlisting}[language=Ruby]
+\begin{lstlisting}[language=Ruby,numbers=none]
 machine 'controller' do
   add_machine_options vagrant_config: controller_config
   role 'allinone-compute'
@@ -216,14 +231,14 @@ As seen for Chef, Puppet can be very useful when dealing with OpenStack installa
 The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}} and allows to deploy both a multi-node and an all-in-one installation. Compared to Chef, with regard to OpenStack, Puppet is a bit more flexible because it allows you to control in more details the OpenStack services installed on every node; for example you can, combining the following instructions, in the Puppet's manifest file of a node different results can be achieved:
 
 \textit{Controller node:}
-\begin{lstlisting}[language=Ruby]
+\begin{lstlisting}[language=Ruby,numbers=none]
 node 'control.localdomain' {
   include ::openstack::role::controller
 }
 \end{lstlisting}
 
 \textit{Controller node:}
-\begin{lstlisting}[language=Ruby]
+\begin{lstlisting}[language=Ruby,numbers=none]
 node 'storage.localdomain' {
   include ::openstack::role::storage
 }
