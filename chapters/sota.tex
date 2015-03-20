@@ -77,11 +77,26 @@ In section \todo{sezione..} we describe how we implemented this algorithm in our
 
 \subsection{Game Theory Approach}
 \label{sec:sota_game_theroy}
-\cite{Xu:2014do}
+The paper \textit{A Game Theory Approach to Fair and Efficient Resource Allocation in Cloud Computing} proposes a game theoretic resources allocation algorithm that considers the fairness among users and the resources utilization for both \cite{Xu:2014do}.\\
+The four main components of the proposed cloud resource management system are:
+\begin{description}
+  \item[CEM - Cloud Environments Monitor] This component retrieves information like host names, IP addresses about physical servers, monitors their statuses (starting, running, shutdown) and the consumption of CPU, memory, and disk storage.
+  \item[RC - Register Center] Every physical server in cloud data center should register its information to RC for connection and management.
+  \item[IM - Infrastructure Manager] It is responsible for deploying and managing the virtualized infrastructures, such as creating and releasing virtual machines.
+  \item[CC - Control Center] It is the computing center to provide the most appropriate decision about resource allocating.
+\end{description}
+
+CEM is monitoring the statuses and resource consumptions for physical servers registered in RC. Once a new physical server started to join the cloud, the information like MAC address, IP address will be registered to RC. When a user sends a service request to cloud, the requirements of resources in this request will be received by CC. CC makes an intelligent resource allocation decision based on the information collected by CEM. The allocation decision is executed by IM to manage the physical servers and place the virtual machines.\cite[p.~3]{Xu:2014do}
+
+They experiment a FUGA (Fairness-Utilization tradeoff Game Algorithm) on a server cluster composed by 8 nodes and show that it make it possible to achieve an optimal tradeoff between fairness and efficiency compared with the evaluation of the Hadoop\footnote{A framework that allows for the distributed processing of large data sets across clusters of computers using simple programming models. \url{http://hadoop.apache.org}} scheduler.
 
 \subsection{Multi-agent Virtual Machine Management}
 \label{sec:sota_mutli_agent}
-\cite{Anderson:2013bh}
+The solution presented in the paper \textit{Multi-agent Virtual Machine Management Using the Lightweight Coordination Calculus} is based on an LCC system that specify the migration behaviour of Virtual Machines within, and between cloud environments. LCC is a Lightweight Coordination Calculus which can be used to provide an executable, declarative specification of an agent interaction model\cite{Anderson:2013bh}.
+
+The proposed system is a distributed between nodes and so doesn't have a central controller that could represent a single point of failure or a bottleneck: agents located on the physical machines negotiate to transfer VMs between themselves, without reference to any centralized authority\cite[p.~124]{Anderson:2013bh}.
+
+The framework designed by the authors provides different types of interaction models by which it is possible to implement a wide range of algorithms and policies to support several different situations.
 
 \subsection{Neat}
 \label{sec:sota_neat}
