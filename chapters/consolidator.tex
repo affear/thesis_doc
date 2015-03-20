@@ -1,4 +1,27 @@
 %!TEX root = ../thesis.tex
 %%--------------------------------------------------------------------------
-%% STATE OF THE ARTS
+%% NOVA CONSOLIDATOR
 %%--------------------------------------------------------------------------
+OpenStack already performs virtual machine placement. This is accomplished thanks to its \texttt{nova-scheduler} service. Once a virtual machine is created (or, in certain cases, resized or live migrated) the scheduler decides which of the available compute nodes can host\footnote{The policies by which a node can host or not a virtual machine are defined by the precise filter which scheduler has been equipped with.} the virtual machine (this phase is called \textit{filtering}) and then selects the best\footnote{Again, it depends on which weighter is used.} among them (this phase is called \textit{weighting}).
+
+OpenStack \emph{doesn't} perform virtual machine consolidation. Each of the operations on virtual machines are issued by the user that owns them (or by \texttt{Heat} for him/her).
+
+Virtual machine consolidation is a technique by which virtual machines locations on hosts are changed to achieve a better resource utilization in the whole system. Thus, virtual machines are periodically live (or cold) migrated to other hosts if some policy determines that its place is the wrong in that precise moment. The policy adopted is determined by the \emph{consolidation algorithm} used.
+
+To add virtual machine consolidation feature to OpenStack we added a service to \texttt{Nova} called \texttt{nova-consolidator}. The new service is implemented in module \code{nova.consolidator} which provides a \code{nova.consolidator.base.BaseConsolidator} class which can be extended to write custom consolidators (see section \ref{sec:cons_base}) and some consolidation algorithms, both custom and taken from the state of the art (see section \ref{sec:cons_algs}).
+
+\section{Consolidator Base}
+\label{sec:cons_base}
+% base + manager
+
+\section{Algorithms}
+\label{sec:cons_algs}
+
+\subsection{Random Algorithm}
+\label{sub:algs_rnd}
+
+\subsection{Genetic Algorithm}
+\label{sub:algs_rnd}
+
+\subsection{Holystic Algorithm}
+\label{sub:algs_rnd}
