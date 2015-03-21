@@ -94,6 +94,13 @@
 \newcommand{\xmark}{\ding{55}}
 \newcommand{\cmark}{\ding{51}}
 
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+% usage:
+% \footnote{\label{note1} bla bla}
+% ... \footnoteref{note1}
+
 %--------------------------------------------------------------------------------
 % document start
 %--------------------------------------------------------------------------------

@@ -12,12 +12,13 @@ To add virtual machine consolidation feature to OpenStack we added a service to 
 
 \section{Consolidator Base}
 \label{sec:cons_base}
+
 Almost every service into OpenStack has three main components, the \emph{command}\footnote{In our case, \code{nova.cmd.consolidator}.} (its function \code{main} will be executed at service startup); the \emph{manager}\footnote{In our case, \code{nova.consolidator.manager}.}, which contains the real logic of the service and the \emph{RPC\footnote{Remote Procedure Call} API}\footnote{In our case, \code{nova.consolidator.rpcapi}}, which is used among OpenStack services to communicate\footnote{\url{https://github.com/affear/nova/tree/n-cons/nova/consolidator}}.
 
-The command basically instantiates a \code{nova.service.Service} object with name ``\texttt{nova-consolidator}''. The service, in turn, instantiates a \code{nova.consolidator.manager.ConsolidatorManager} object; starts its RPC server and its \emph{periodic tasks}. As we can see in listing \ref{lst:cons_manager}, \code{ConsolidatorManager} exposes only one periodic task which is \code{consolidate} method.
+The command basically instantiates a \code{nova.service.Service} object with name ``\texttt{nova-consolidator}''. The service, in turn, instantiates a \code{nova.consolidator.manager.ConsolidatorManager} object; starts its RPC server and its \emph{periodic tasks}. As we can see in listing \ref{lst:cons_manager}\footnote{\label{note:cons_code}The code has been properly cut to fit the page and the reader needs.}, \code{ConsolidatorManager} exposes only one periodic task which is \code{consolidate} method.
 Its period is defined in \texttt{/etc/nova/nova.conf} file (which can be edited using DevStack. See ~\ref{sub:fakestack_conf}) in option \texttt{consolidation\_interval} as well as the consolidator class used by the manager. When the manager is created a consolidator object is obtained using the \texttt{consolidator\_class} provided. Then, periodically, \code{consolidate} task is invoked. \code{consolidate} function \emph{delegates} consolidation to the consolidator object obtaining the necessary migrations to be performed. Once migrations are obtained, they are applied using \texttt{nova-compute}'s API.
 
-The consolidator class is, by default, \code{nova.consolidator.base.BaseConsolidator} (see listing \ref{lst:cons_base}), which does nothing but defining a base class to be extended with real consolidation algorithms. Its \code{get\_migrations} method, in fact, returns an empty list of migrations. The most important method in \code{BaseConsolidator} is \code{consolidate}, which is the method the manager delegates consolidation to.
+The consolidator class is, by default, \code{nova.consolidator.base.BaseConsolidator} (see listing \ref{lst:cons_base}\footnoteref{note:cons_code}), which does nothing but defining a base class to be extended with real consolidation algorithms. Its \code{get\_migrations} method, in fact, returns an empty list of migrations. The most important method in \code{BaseConsolidator} is \code{consolidate}, which is the method the manager delegates consolidation to.
 
 This method creates a snapshot of the system (see \ref{sub:cons_obj}) and passes it to \code{get\_migrations} method. \code{get\_migrations} will implement the consolidation algorithm desired. Eventually, a transitive closure on migrations is applied\footnote{If instance $I$ is moved first to host $A$ and then to host $B$; instance $I$ is only moved to host $B$.} and the migrations are returned to the manager.
 
@@ -30,40 +31,26 @@ This method creates a snapshot of the system (see \ref{sub:cons_obj}) and passes
 ]
 class ConsolidatorManager(manager.Manager):
 
-	target = messaging.Target(version='3.38')
-
 	def __init__(self, *args, **kwargs):
 		self.compute_api = compute_api.API()
-		self.consolidator = importutils.import_class(CONF.consolidator_class)()
-		super(ConsolidatorManager, self).__init__(
-			service_name="consolidator",
-			*args, **kwargs
-		)
+		self.consolidator = importutils.\
+			import_class(CONF.consolidator_class)()
+		# lines skipped
 
-	@periodic_task.periodic_task(spacing=CONF.consolidation_interval)
+	@periodic_task.\
+		periodic_task(spacing=CONF.consolidation_interval)
 	def consolidate(self, ctxt):
-		LOG.debug('Consolidation cycle started')
-
 		migrations = self.consolidator.consolidate(ctxt)
 		for m in migrations:
 			self._do_live_migrate(ctxt, m)
 
-		LOG.debug('Consolidation cycle ended')
-
 	def _do_live_migrate(self, ctxt, migration):
-		LOG.debug('Applying migration: {}'.format(str(migration)))
 		instance = migration.instance
 		host_name = migration.host.host
-		try:
-			self.compute_api.live_migrate(ctxt, instance, False, False, host_name)
-		except (
-				# during consolidation, it could happen that:
-				exception.InstanceInvalidState, # the instance changed state
-				exception.InstanceNotFound, # the instance was destroyed
-				exception.ComputeServiceUnavailable, # the dest host is not available
-				exception.MigrationPreCheckError # the dest host is now full
-			) as e:
-			LOG.warning(_LW(e.message))
+		self.compute_api.live_migrate(
+			ctxt, instance,
+			False, False, host_name
+		)
 \end{lstlisting}
 
 \begin{lstlisting}[
@@ -76,35 +63,13 @@ class ConsolidatorManager(manager.Manager):
 class BaseConsolidator(object):
 
 	class Migration(object):
-		'''
-			Simple abstraction for a migration
-		'''
 		def __init__(self, instance, host):
 			super(BaseConsolidator.Migration, self).__init__()
 			self.instance = instance
 			self.host = host
 
-		def __repr__(self):
-			return '{} --> {}'.format(
-				self.instance.id,
-				self.host.host or self.host.id
-			)
-
-	def __init__(self):
-		super(BaseConsolidator, self).__init__()
-
-	def _transitive_closure(self, migs):
-		closed_migs = []
-		migs_by_instance_id = [m.instance.id for m in migs]
-		rev_migs = list(reversed(migs))
-		rev_migs_by_instance_id = list(reversed(migs_by_instance_id))
-		unique_instance_ids = list(set(migs_by_instance_id))
-
-		for id in unique_instance_ids:
-			last_matching_mig_index = rev_migs_by_instance_id.index(id)
-			closed_migs.append(rev_migs[last_matching_mig_index])
-
-		return closed_migs
+	# _transitive_closure method
+	# implementation skipped
 
 	def consolidate(self, ctxt):
 		snapshot = Snapshot(ctxt)
@@ -112,11 +77,6 @@ class BaseConsolidator(object):
 		return self._transitive_closure(migs)
 
 	def get_migrations(self, snapshot):
-		'''
-			Base method to be overridden to obtain consolidation.
-			:param:snapshot: a nova.consolidator.objects.Snapshot object
-			:returns: a list of Migration
-		'''
 		return []
 \end{lstlisting}
 
