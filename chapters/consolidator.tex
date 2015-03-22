@@ -86,7 +86,7 @@ class BaseConsolidator(object):
 We thought that it wouldn't have been fair to leave to the user the duty to learn and understand OpenStack's complex database APIs.
 Due to this fact, we developed \code{nova.consolidator.objects}, which is a module that defines an abstraction of system snapshot to be used in method \code{get\_migrations} by developers. The module provides the class \code{nova.consolidator.objects.Snapshot}. A \code{Snapshot} object offers attributes to access all information about the system, such as current active nodes and instances both for each node and, generally, in the system itself. The \code{Snapshot} is thought to be renewed at each consolidation cycle. So, any attribute is lazily obtained on its first call: subsequent invocations of that attribute won't refresh snapshot's state. The Snapshot is, thus, entirely cached\footnote{Once an instance or a compute node is obtained it will not be queried again on OpenStack's database. Its status is \emph{frozen} at the moment the first query has been performed. To refresh a \code{Snapshot} it is necessary to create a new \code{Snapshot} object.}.
 
-In detail, a \code{Snapshot} object offers active nodes (\code{nodes} attribute) and all, running, migrable and not instances. Instances are \code{nova.objects.instance.Instance}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/instance.py}} objects; nodes are wrappers for \code{nova.objects.compute\_node.ComputeNode}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/compute_node.py}} objects, which add the possibility to get all, running, migrable and not instances per compute node.
+In detail, a \code{Snapshot} object offers active nodes (\code{nodes} attribute) and all, running, migrable\footnote{According to us, an instance is \emph{migrable} when its state is \texttt{ACTIVE} and its power state id \texttt{RUNNING}.} and not instances. Instances are \code{nova.objects.instance.Instance}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/instance.py}} objects; nodes are wrappers for \code{nova.objects.compute\_node.ComputeNode}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/compute_node.py}} objects, which add the possibility to get all, running, migrable and not instances per compute node.
 
 In any case, the developer is not thought to instantiate \code{Snapshot} objects, because this is up to \code{consolidate} method, which already instantiates and passes the current system snapshot to method \code{get\_migrations}, which is the \emph{only} method which needs to be overridden by the user in a custom consolidator class.
 
@@ -127,12 +127,63 @@ assert nodes == nodes_new # evaluates to True
 
 \section{Algorithms}
 \label{sec:cons_algs}
+In this section, we explain in detail consolidation algorithms that we implemented in our \texttt{nova-consolidator}. Each of the algorithms proposed is run inside a consolidator class that inherits from \code{nova.consolidator.base.BaseConsolidator}, inside \code{get\_migrations} method.
 
 \subsection{Random Algorithm}
 \label{sub:algs_rnd}
+The first algorithm we implemented is the random one\footnote{\url{https://github.com/affear/nova/blob/n-cons/nova/consolidator/base.py}}. This algorithm was implemented for testing purpose and to see if even randomization could bring improvement in resource optimization, given that virtual machines are never moved in OpenStack\footnote{Except for when a user decides to, or on a resize call. When a virtual machine is resized to a flavor which is too big for the current host, it is migrated to a suitable one.}.
+
+The algorithm takes, by configuration, a percentage of migrable instances to be migrated to other compute nodes. Instances are randomly chosen from hosts and their destination is randomly chosen among remaining hosts. Choices are not taken taking into account host suitability. The algorithm by itself doesn't rely on the fact that migrations will be applied. If a migration fails, due to resource usage problems, it is not a problem.
+
+Random algorithm is highlighted in in listing \ref{lst:rnd_alg}\footnoteref{note:cons_code}.
+
+\begin{lstlisting}[
+	float,
+	language=python,
+	caption={Code for random algorithm},
+	label={lst:rnd_alg},
+	tabsize=2
+]
+def get_migrations(self, snapshot):
+	nodes = snapshot.nodes
+	no_nodes = len(nodes)
+	migration_percentage = float(CONF.consolidator.migration_percentage) / 100
+	no_inst = len(snapshot.instances_migrable)
+	no_inst_migrate = int(no_inst * migration_percentage)
+
+	# if no_inst_migrate == 0
+	# or no_nodes < 2, then
+	# return empty list.
+	# Cannot migrate.
+
+	migs = []
+	while no_inst_migrate > 0:
+		nodes_cpy = list(nodes) # copy nodes list
+
+		from_host = choose_host(nodes_cpy)
+		# choose_host code is skipped.
+		# The chosen node is randomly chosen
+		# taking into account that it has to host
+		# at least one instance.
+
+		inst_on_host = from_host.instances_migrable
+		no_inst_on_host = len(inst_on_host)
+
+		top_bound = min(no_inst_on_host, no_inst_migrate)
+		n = random.randint(1, top_bound)
+		no_inst_migrate -= n
+
+		instances = random.sample(inst_on_host, n)
+		nodes_cpy.remove(from_host) # do not choose same host
+		to_host = random.choice(nodes_cpy)
+		for i in instances:
+			migs.append(self.Migration(i, to_host))
+
+	return migs
+\end{lstlisting}
 
 \subsection{Genetic Algorithm}
 \label{sub:algs_rnd}
 
-\subsection{Holystic Algorithm}
+\subsection{Holistic Algorithm}
 \label{sub:algs_rnd}
