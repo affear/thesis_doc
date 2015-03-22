@@ -250,8 +250,38 @@ class NoNodesFitnessFunction(FitnessFunction):
 	\State
 	\State return population
 \end{algorithmic}
-\end{algorithm} 
+\end{algorithm}
 
 \subsection{Holistic Algorithm}
 \label{sub:algs_rnd}
-%sec:sota_holistic
+As well as genetic algorithm, holistic algorithm\footnote{\url{https://github.com/affear/nova/tree/n-cons/nova/consolidator/holistic}} is taken from the state of the art (see \ref{sec:sota_holistic}). In algorithm \ref{alg:holistic} we provide a high-level pseudo-code for holistic algorithm.
+
+\begin{algorithm}[H]
+\caption{Pseudo-code for holistic algorithm}
+\label{alg:holistic}
+\begin{algorithmic}[0]
+	\State nodes = nodes from given snapshot
+	\State no\_nodes = number of nodes given in snapshot
+	\State new\_state = mappings (instance: node)
+	\State
+	\ForAll{node in nodes}
+		\State node = least loaded node
+		\State
+		\If{node has no instances}
+			\State continue
+		\EndIf
+		\State
+		\State Sort node's migratable instances from biggest to smallest
+		\State
+		\ForAll{instance in node's instances}
+			\State to\_node = most loaded node that can host instance
+			\If{to\_node doesn't exist}
+				\State continue
+			\EndIf
+			\State add mapping (instance: to\_node) to new\_state
+		\EndFor
+	\EndWhile
+	\State
+	\State return new\_state
+\end{algorithmic}
+\end{algorithm}
