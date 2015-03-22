@@ -86,7 +86,7 @@ class BaseConsolidator(object):
 We thought that it wouldn't have been fair to leave to the user the duty to learn and understand OpenStack's complex database APIs.
 Due to this fact, we developed \code{nova.consolidator.objects}, which is a module that defines an abstraction of system snapshot to be used in method \code{get\_migrations} by developers. The module provides the class \code{nova.consolidator.objects.Snapshot}. A \code{Snapshot} object offers attributes to access all information about the system, such as current active nodes and instances both for each node and, generally, in the system itself. The \code{Snapshot} is thought to be renewed at each consolidation cycle. So, any attribute is lazily obtained on its first call: subsequent invocations of that attribute won't refresh snapshot's state. The Snapshot is, thus, entirely cached\footnote{Once an instance or a compute node is obtained it will not be queried again on OpenStack's database. Its status is \emph{frozen} at the moment the first query has been performed. To refresh a \code{Snapshot} it is necessary to create a new \code{Snapshot} object.}.
 
-In detail, a \code{Snapshot} object offers active nodes (\code{nodes} attribute) and all, running, migrable\footnote{According to us, an instance is \emph{migrable} when its state is \texttt{ACTIVE} and its power state id \texttt{RUNNING}.} and not instances. Instances are \code{nova.objects.instance.Instance}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/instance.py}} objects; nodes are wrappers for \code{nova.objects.compute\_node.ComputeNode}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/compute_node.py}} objects, which add the possibility to get all, running, migrable and not instances per compute node.
+In detail, a \code{Snapshot} object offers active nodes (\code{nodes} attribute) and all, running, migratable\footnote{According to us, an instance is \emph{migratable} when its state is \texttt{ACTIVE} and its power state id \texttt{RUNNING}.} and not instances. Instances are \code{nova.objects.instance.Instance}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/instance.py}} objects; nodes are wrappers for \code{nova.objects.compute\_node.ComputeNode}\footnote{\url{https://github.com/openstack/nova/blob/master/nova/objects/compute_node.py}} objects, which add the possibility to get all, running, migratable and not instances per compute node.
 
 In any case, the developer is not thought to instantiate \code{Snapshot} objects, because this is up to \code{consolidate} method, which already instantiates and passes the current system snapshot to method \code{get\_migrations}, which is the \emph{only} method which needs to be overridden by the user in a custom consolidator class.
 
@@ -133,7 +133,7 @@ In this section, we explain in detail consolidation algorithms that we implement
 \label{sub:algs_rnd}
 The first algorithm we implemented is the random one\footnote{\url{https://github.com/affear/nova/blob/n-cons/nova/consolidator/base.py}}. This algorithm was implemented for testing purpose and to see if even randomization could bring improvement in resource optimization, given that virtual machines are never moved in OpenStack\footnote{Except for when a user decides to, or on a resize call. When a virtual machine is resized to a flavor which is too big for the current host, it is migrated to a suitable one.}.
 
-The algorithm takes, by configuration, a percentage of migrable instances to be migrated to other compute nodes. Instances are randomly chosen from hosts and their destination is randomly chosen among remaining hosts. Choices are not taken taking into account host suitability. The algorithm by itself doesn't rely on the fact that migrations will be applied. If a migration fails, due to resource usage problems, it is not a problem.
+The algorithm takes, by configuration, a percentage of migratable instances to be migrated to other compute nodes. Instances are randomly chosen from hosts and their destination is randomly chosen among remaining hosts. Choices are not taken taking into account host suitability. The algorithm by itself doesn't rely on the fact that migrations will be applied. If a migration fails, due to resource usage problems, it is not a problem.
 
 Random algorithm is highlighted in in listing \ref{lst:rnd_alg}\footnoteref{note:cons_code}.
 
@@ -184,6 +184,74 @@ def get_migrations(self, snapshot):
 
 \subsection{Genetic Algorithm}
 \label{sub:algs_rnd}
+The idea to use a genetic algorithm to solve virtual machine consolidation problem is taken from the state of the art (see section \ref{sec:sota_ga}), although heavily revisited from us\footnote{https://github.com/affear/nova/tree/n-cons/nova/consolidator/ga}.
+
+Our genetic algorithm uses a list as chromosome structure. Each element of the list (a gene) is considered as a migratable instance an its value is the hostname of the compute node that will host the instance. At first, we developed the algorithm as a ``standard'' genetic algorithm. So, it provided a crossover step. After some simulation we realized that $100\%$ of the children generated were unhealthy\footnote{A child is considered unhealthy when it violates system constraints. For example, instances on a node exceed its memory capacity.}. Suddenly, we realized that the probability of generating a healthy child was close to zero because of the tightness of system constraints. Thus, the crossover step became useless and we decided to turn it into a massive mutation. While in crossover we chose\footnote{Chromosome are chosen among the whole population using a specific selection algorithm.} two chromosomes, father and mother, and crossed them; now we choose only one chromosome and massively\footnote{We change the value of an high percentage of its genes.} mutate it.
+
+The algorithm is configurable in all of its aspects:
+\begin{description}
+	\item[prob\_mutation] (Defaults to $0.8$) The probability to apply mutation on a chromosome.
+	\item[mutation\_perc] (Defaults to $10$) The percentage of the genes to be mutated in a chromosome, once mutation is decided to be applied.
+	\item[selection\_algorithm] (Defaults to \code{nova.consolidator.ga.functions.RouletteSelection}) The selection algorithm used. Selection algorithm plays its role when its time to decide which chromosomes to cross (in our case, mutate) to generate a new children to add to the new population (an implementation of tournament selection is provided in \code{nova.consolidator.ga.functions.TournamentSelection}).
+	\item[fitness\_function] (Defaults to \code{nova.consolidator.ga.functions.NoNodesFitnessFunction}) Fitness function is the one thats establishes how much the chromosome fits the solution wanted (see listing \ref{lst:ga_fitness} for \code{NoNodesFitnessFunction} implementation).
+	\item[population\_size] (Defaults to $500$) The size of the population.
+	\item[epoch\_limit] (Defaults to $100$) The number of epochs above what the algorithm stops.
+	\item[elitism\_perc] (Defaults to $0$) The percentage of chromosomes that will pass to the next epoch. The number \texttt{N} of elite chromosomes is determined from this option and \texttt{population\_size} option. At each step the best \texttt{N} chromosomes (according to the fitness function used) will pass to the next epoch.
+\end{description}
+
+There is another option which is \texttt{best} (defaults to $False$). After running some simulation, we discovered that most of the epochs run without improving the fitness of the best chromosome and so we spent time in generating useless children. To overcome this problem we revisited mutation. Mutation is applied changing a gene's value and maintaining the chromosomes validity. To change a gene value means moving an instance to another compute node. The other compute node, normally, is chosen randomly among suitable nodes\footnote{Nodes that, hosting the machine, will not exceed their capacity in terms of vCPUs, memory and disk.}. When \texttt{best} is set to $True$, the other compute node is no more chosen randomly but as the best\footnote{The most busy compute node.} among suitable compute nodes. With this change in mutation logic, it turns out that the best chromosome generated in the very first epoch will almost never be exceeded by another one. Thus, this variant, truncates to number of epochs to $1$. The ``best'' variant is something vaguely similar to a genetic algorithm because there is no evolution except from selection logic and mutation.
+
+In algorithm \ref{alg:ga} we provide a high-level pseudo-code for our genetic algorithm.
+
+\begin{lstlisting}[
+	float,
+	language=python,
+	caption={Code for \code{NoNodesFitnessFunction}},
+	label={lst:ga_fitness},
+	tabsize=2
+]
+class NoNodesFitnessFunction(FitnessFunction):
+  # The higher the less nodes are used:
+  #  - no_nodes = 1: fitness = 1
+  #  - no_nodes -> infinite: fitness -> 0
+
+  def get(self, chromosome):
+    return float(1) / len(set(chromosome))
+\end{lstlisting}
+
+\begin{algorithm}[H]
+\caption{Pseudo-code for our genetic algorithm}
+\label{alg:ga}
+\begin{algorithmic}[0]
+	\State population = \texttt{population\_size} random generated valid chromosomes
+	\State epoch\_count = 0
+	\State
+
+	\Procedure{new\_chromosome}{}\Comment{Returns a new chromosome}
+		\State Select a chromosome from population using \texttt{selection\_algorithm}
+		\State Mutate the chromosome with probability \texttt{mutation\_prob}
+		\State Return the chromosome obtained
+	\EndProcedure
+	\State
+	\Procedure{next}{}\Comment{Returns next population}
+		\State Take the elite from current population (\texttt{elitism\_perc})
+		\State Add it to new population
+		\While{new population is not as big as \texttt{population\_size}}
+			\State Add to new population the result of new\_chromosome procedure
+		\EndWhile
+	\EndProcedure
+	\State
+
+	\While{epoch\_count is less than \texttt{epoch\_limit}}
+		\State population = next()
+		\State Increment epoch\_count
+	\EndWhile
+
+	\State
+	\State return population
+\end{algorithmic}
+\end{algorithm} 
 
 \subsection{Holistic Algorithm}
 \label{sub:algs_rnd}
+%sec:sota_holistic
