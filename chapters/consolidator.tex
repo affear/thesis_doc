@@ -47,6 +47,7 @@ class ConsolidatorManager(manager.Manager):
 	def _do_live_migrate(self, ctxt, migration):
 		instance = migration.instance
 		host_name = migration.host.host
+		# exception catching skipped
 		self.compute_api.live_migrate(
 			ctxt, instance,
 			False, False, host_name
