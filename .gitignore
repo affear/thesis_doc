@@ -28,5 +28,6 @@
 *.bak
 *.fdb_latexmk
 *.fls
+*.pdf
 
 *-eps-converted-to.pdf
