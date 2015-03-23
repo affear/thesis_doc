@@ -54,19 +54,12 @@ However \texttt{nova-network} is still supported by OpenStack and can powerful e
 
 \section{DevStack}
 \label{sec:devstack}
-
-% - devstack
-% 	- stack.sh
-% 	- unstack.sh
-% 	- clean.sh
-% 	- 
-% 	- configurations local.conf
  
 DevStack\footnote{More info at \url{docs.openstack.org/developer/devstack}} is a set of scripts and utilities to quickly deploy an OpenStack cloud environment and it is freely available on GitHub\footnote{\url{github.com/openstack-dev/devstack}}.\\
 DevStack allows developers and system administrators to automate the process of installing OpenStack on a server reducing it to a simple command for every installation.\\
 The services that are configured by default are Identity (\texttt{Keystone}), Object Storage (\texttt{Swift}), Image Storage (\texttt{Glance}), Block Storage (\texttt{Cinder}), Compute (\texttt{Nova}), Network (\texttt{Nova}), Dashboard (\texttt{Horizon}) and Orchestration (\texttt{Heat}).
 The main script is \code{stack.sh}; all the configuration such as Git repositories to use, services to enable or OS images to use can be achieved overriding default environment variables (found in \code{stackrc}) by creating the file \code{local.conf} with a \code{localrc} section as shown below:
-\begin{lstlisting}[numbers=none]
+\begin{lstlisting}[numbers=none,label={lst:devstack_local_conf}]
 [[local|localrc]]
 ADMIN_PASSWORD=secrete
 DATABASE_PASSWORD=$ADMIN_PASSWORD
@@ -74,7 +67,8 @@ RABBIT_PASSWORD=$ADMIN_PASSWORD
 SERVICE_PASSWORD=$ADMIN_PASSWORD
 SERVICE_TOKEN=a682f596-76f3-11e3-b3b2-e716f9080d50
 # ...
+ENABLED_SERVICES=n-cpu,n-api,n-net
+# ...
 \end{lstlisting}
-The \code{stack.sh} also takes care of installing (through the \code{tools/install\_prereqs.sh})
-
-
+The environment variable \code{ENABLED\_SERVICES} is used to define the service to run: in listing \ref{lst:devstack_local_conf} are shown the \texttt{Nova} services to install (\texttt{nova-compute}, \texttt{nova-api}, \texttt{nova-network}) in a simple compute node installation.
+By running the script \code{tools/install\_prereqs.sh} it is furthermore possible to install all the dependencies required by the configured services.\\Other useful scripts provided by DevStack are \code{unstack.sh}, that allows to stop everything that was started by \code{stack.sh}, and \code{clean.sh} that tries to remove all the traces left by the OpenStack installation performed by DevStack.
