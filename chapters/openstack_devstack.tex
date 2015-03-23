@@ -65,9 +65,16 @@ However \texttt{nova-network} is still supported by OpenStack and can powerful e
 DevStack\footnote{More info at \url{docs.openstack.org/developer/devstack}} is a set of scripts and utilities to quickly deploy an OpenStack cloud environment and it is freely available on GitHub\footnote{\url{github.com/openstack-dev/devstack}}.\\
 DevStack allows developers and system administrators to automate the process of installing OpenStack on a server reducing it to a simple command for every installation.\\
 The services that are configured by default are Identity (\texttt{Keystone}), Object Storage (\texttt{Swift}), Image Storage (\texttt{Glance}), Block Storage (\texttt{Cinder}), Compute (\texttt{Nova}), Network (\texttt{Nova}), Dashboard (\texttt{Horizon}) and Orchestration (\texttt{Heat}).
-The main script is \code{stack.sh}; before installing OpenStack it takes care of installing all the required dependencies and setup the system to host the OpenStack installation. All the configuration can be achieved overriding environment variables used in \code{stack.sh} by creating the file \code{local.conf} with a \code{localrc} section as shown below:\\
+The main script is \code{stack.sh}; all the configuration such as Git repositories to use, services to enable or OS images to use can be achieved overriding default environment variables (found in \code{stackrc}) by creating the file \code{local.conf} with a \code{localrc} section as shown below:
 \begin{lstlisting}[numbers=none]
 [[local|localrc]]
-VARIABLE=value
+ADMIN_PASSWORD=secrete
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+SERVICE_TOKEN=a682f596-76f3-11e3-b3b2-e716f9080d50
+# ...
 \end{lstlisting}
-\\
+The \code{stack.sh} also takes care of installing (through the \code{tools/install\_prereqs.sh})
+
+
