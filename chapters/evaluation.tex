@@ -3,8 +3,15 @@
 %% EVALUATION
 %%--------------------------------------------------------------------------
 
+Due to the two-topic nature of this thesis we split this chapter into two sections. Section \ref{sec:eval_adock} discusses about aDock system evaluation, while section \ref{sec:eval_cons} discusses about the evaluation of the different consolidation algorithms implemented by us into OpenStack.
+
 \section{aDock}
 \label{sec:eval_adock}
+This section presents the results of the experiments we carried out to evaluate aDock's capability to create fully functional experimentation environments based on OpenStack, and its scalability.
+
+The first experiments we show were performed on a Dell PowerEdge T320 server\footnote{Intel Xeon E5-2430 2.20GHz, 15M Cache, Ubuntu 14.04LTS 3.13.0-32-generic X86\_64. 16GB of RAM and SWAP. No SSD equipped.}. This is not a high-end server, and can be bought nowadays for less the one thousand euros. 
+
+In the experiment we created an aDock environment with $1$ controller container and $1$ compute container. We then progressively increased the number of compute containers to identify how many could be run at the same time. Keep in mind that each container was actively running OpenStack code. The maximum number of compute nodes that can be run in a two-node architecture with legacy networking, before the controller becomes a management bottleneck, is $20$~\footnote{\url{https://docs.chef.io/openstack_architecture.html#openstack-chef-single-controller-n-compute}}. Therefore, we wanted to see whether we could reach this threshold on a single machine, and to what extent we could surpass it. Table~\ref{tab:adock_server} shows the results of our experiments.
 
 \begin{table}[h!]
 \centering
@@ -31,6 +38,12 @@
   \caption{aDock's performance on a PowerEdge T320 server.}
   \label{tab:adock_server}
 \end{table}
+
+As we can see we succeeded in reaching ``1 + 20'' architecture and overcome it to ``1 + 42''. We think this is a great result, because it could possibly allow the user to try different architectures with less compute nodes and more controller nodes. Although, up to now, aDock doesn't support architectures with more than one controller node by default.
+
+On of our aims is to understand if a user can use aDock on his/her laptop without owning a server. So, we tried to deploy an aDock environment on two different laptops. We left Google Chrome\footnote{\url{https://www.google.it/chrome/browser/desktop/}} (our favorite web browser) and Sublime Text\footnote{\url{http://www.sublimetext.com/}} (our favorite text editor) running because we assumed that a user is developing and browsing while using aDock platform\footnote{Keep in mind that this fact impacts considerably the test. Google Chrome, for example, increases resource usage so much, that Google itself provides ways to lower it (see \url{https://support.google.com/chrome/answer/6152583?hl=en}).}.
+
+Our goal was to deploy a ``1 + 5'' configuration (one controller node and five compute nodes), which we think it is a configuration which satisfies most of testing use cases. The test took place with the same form of the server one, except from the fact that we stopped at ``1 + 5'' architecture goal. In table \ref{tab:adock_ultra} we show the results of the experiment conducted on a Samsung SERIES 5 ULTRA\footnote{Intel Core i5 1.6 GHz, Linux Mint 3.13.0-24-generic XFCE, 4GB of RAM and SWAP. No SSD equipped.}, while in table \ref{tab:adock_macpro} we show results on an Apple MacBook Pro (Early 2011)\footnote{Intel Core i5 2.3 GHz, Mac Os X Yosemite, 8GB of RAM, SWAP is dynamically allocated. SSD equipped.}.
 
 \begin{table}[h!]
 \centering
@@ -83,6 +96,19 @@
   \caption{aDock's performance on a Apple MacBook Pro (Early 2011).}
   \label{tab:adock_macpro}
 \end{table}
+
+We succeeded in deploying a ``1 + 5'' configuration on both laptops, maintaining a usable environment. With the term ``usable'', we mean that the user can still work on his/her text editor, web browser and aDock itself, and so he/she can go on developing, browsing and run simulations with Oscard with a reasonable response time from his/her laptop. For each step we recorded CPU usage, RAM usage, SWAP usage and the required time to run the next aDock container in that state (\textit{AvgSwap} is expressed in MB for MacBook Pro, because Mac Os dynamically allocates SWAP space and, so, it is not possible to give a percentage of usage.).
+
+In the case of Samsung, we can see that there is little dependence among CPU usage, startup time and number of containers. RAM usage and SWAP are strictly correlated, instead. Once RAM usage reaches around $96$ percent, SWAP memory starts to be used, resulting in growing percentages of SWAP usage. Thanks to this data, we understand that running a containers is mostly a memory intensive task.
+
+In the case of MacBook, we see CPU usage grow significantly and RAM and SWAP stay almost unchanged during all the steps of the test. Our opinion is that Mac OS is too opaque to the user to understand what is happening to the memory.
+
+It is not surprising to see that MacBook is almost 4 times faster than Samsung and very close to PowerEdge T320 in starting containers. The MacBook, in fact, is equipped with an SSD hard-drive and Docker stores containers and the images they come from to disk. Moreover SWAP memory is allocated on the disk itself and, when aDock comes to use that, SSD makes the difference.
+
+If we sum up boot times for the ``1 + 5'' configuration we obtain around $26$ minutes for PowerEdge T320\footnote{Formula used: $(588s + 188s * 5) / 60s$.}; around $1$ hour and $50$ minutes for Samsung\footnote{Formula used $(1736s + 898s + 923s + 934s + 976s + 1104s) / 3600$.} and around $30$ minutes for MacBook Pro\footnote{Formula used: $(466s + 242s + 255s + 255s + 257s + 288s) / 60s$}. We think these are reasonable timings to deploy a private cloud system. We have to keep in mind that Samsung, which resulted in a very high time of deploy, is a laptop which is not to be considered as a default in these years. Its specifics, in fact, are beneath the ones of normal laptops in sales into stores now.
+
+Another important fact to keep in mind is that OpenStack installation through DevStack is a network intensive task due to OpenStack's repositories cloning. All test were run with a connection of $100$Mb/s download speed.
+Timings reported are dilated by the fact that compute nodes are started serially. If they were started concurrently (as FakeStack gives the opportunity to do. See sub-section \ref{sub:fakestack_scripts}.) timings would have been lower. Timings considered are to be thought of as worst case scenarios.
 
 \section{Consolidators}
 \label{sec:eval_cons}
