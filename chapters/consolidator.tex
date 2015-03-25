@@ -183,7 +183,7 @@ def get_migrations(self, snapshot):
 \end{lstlisting}
 
 \subsection{Genetic Algorithm}
-\label{sub:algs_rnd}
+\label{sub:algs_ga}
 The idea to use a genetic algorithm to solve virtual machine consolidation problem is taken from the state of the art (see section \ref{sec:sota_ga}), although heavily revisited from us\footnote{https://github.com/affear/nova/tree/n-cons/nova/consolidator/ga}.
 
 Our genetic algorithm uses a list as chromosome structure. Each element of the list (a gene) is considered as a migratable instance an its value is the hostname of the compute node that will host the instance. At first, we developed the algorithm as a ``standard'' genetic algorithm. So, it provided a crossover step. After some simulation we realized that $100\%$ of the children generated were unhealthy\footnote{A child is considered unhealthy when it violates system constraints. For example, instances on a node exceed its memory capacity.}. Suddenly, we realized that the probability of generating a healthy child was close to zero because of the tightness of system constraints. Thus, the crossover step became useless and we decided to turn it into a massive mutation. While in crossover we chose\footnote{Chromosome are chosen among the whole population using a specific selection algorithm.} two chromosomes, father and mother, and crossed them; now we choose only one chromosome and massively\footnote{We change the value of an high percentage of its genes.} mutate it.
@@ -253,7 +253,7 @@ class NoNodesFitnessFunction(FitnessFunction):
 \end{algorithm}
 
 \subsection{Holistic Algorithm}
-\label{sub:algs_rnd}
+\label{sub:algs_holistic}
 As well as genetic algorithm, holistic algorithm\footnote{\url{https://github.com/affear/nova/tree/n-cons/nova/consolidator/holistic}} is taken from the state of the art (see \ref{sec:sota_holistic}). In algorithm \ref{alg:holistic} we provide a high-level pseudo-code for holistic algorithm.
 
 \begin{algorithm}[H]
