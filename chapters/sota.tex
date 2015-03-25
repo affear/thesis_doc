@@ -137,7 +137,12 @@ Below we are presenting them highlighting their main features and their strength
 Vagrant\footnote{\url{www.vagrantup.com}} is a virtualization framework for creating, configuring and managing development environments, written in Ruby, that allows to  virtual development environments. It is a wrapper around virtualization software such as VirtualBox, KVM, VMware and could be used together with configuration management tools such as Chef and Puppet.
 Thanks to an online repository \footnote{\url{www.vagrantcloud.com}} it is possible to automatically download a Vagrant Box and run it with a single command: \code{vagrant up vagrant-box-name}.
 It is also possible to create and configure custom Vagrant Box by simply writing a Vagrantfile:
-\begin{lstlisting}[language=Ruby,numbers=none]
+\begin{lstlisting}[
+  language=Ruby,
+  numbers=none,
+  caption={\texttt{Vagrantfile} example},
+  label={lst:vagrantfile_example},
+  ]
 box      = 'trusty64'
 url      = 'http://files.vagrantup.com/precise32.box'
 hostname = 'customtrustybox'
@@ -179,10 +184,16 @@ To simplify the communication with the \code{chef-server} Chef provides a comman
 
 Chef and OpenStack can be combined and used together in different ways, many of which have a different goal compared to our thesis. Is it possible in fact to deploy and manage a production OpenStack installation running on multiple servers and supervised by a Chef Server using the subcommand \code{knife openstack} to control the OpenStack APIs through Chef and thus instantiate new physical servers with a chef-client installed or turn them off (\code{knife openstack server create / delete}).
 In this situation you can achieve a ``1 + N'' configuration that is one OpenStack Controller and N OpenStack Nodes, and the OpenStack services are predefined and you cannot configure an ad hoc configuration.
-Therefore an ``All-in-One Compute'' configuration can be chosen where all the OpenStack services are installed on a single node.\\
-These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a Vagrantfile that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
+Therefore an ``All-in-One'' configuration can be chosen where all the OpenStack services are installed on a single node.\\
+These configurations can be achieved with the help of Vagrant that will cover all the steps to install OpenStack on a virtual machine and configure all its services (excluded Block Storage, Object Storage, Metering, and Orchestration). Within the OpenStack chef-repo\footnote{\url{https://github.com/stackforge/openstack-chef-repo}} there is a ``recipe'' that configure a VirtualBox virtual machine that will host and All-in-One installation. Here is a part of it:
 
-\begin{lstlisting}[language=Ruby,numbers=none]
+\begin{lstlisting}[
+  float,
+  language=Ruby,
+  numbers=none,
+  caption={Recipe to run an ``All-in-One'' configuration (\texttt{aio-nova.rb})},
+  label={lst:aio_recipe},
+  ]
 machine 'controller' do
   add_machine_options vagrant_config: controller_config
   role 'allinone-compute'
@@ -228,17 +239,27 @@ Puppet is structured in master-slave architecture: the master (that can be one o
 \label{subp:sota_puppet_openstack}
 
 As seen for Chef, Puppet can be very useful when dealing with OpenStack installation and maintenance. To configure and deploy an OpenStack infrastructure with the help of Puppet exists a set of ``modules'' freely downloadable from Puppet Forge that simplifies most of the operations such as OpenStack instances provisioning, configuration management and others.
-The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}} and allows to deploy both a multi-node and an all-in-one installation. Compared to Chef, with regard to OpenStack, Puppet is a bit more flexible because it allows you to control in more details the OpenStack services installed on every node; for example you can, combining the following instructions, in the Puppet's manifest file of a node different results can be achieved:
+The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}} and allows to deploy both a multi-node and an all-in-one installation. Compared to Chef, with regard to OpenStack, Puppet is a bit more flexible because it allows you to control in more details the OpenStack services installed on every node; for example you can, combining the following instructions in the Puppet's manifest file of a node, achieve different results:
 
 \textit{Controller node:}
-\begin{lstlisting}[language=Ruby,numbers=none]
+\begin{lstlisting}[
+  language=Ruby,
+  numbers=none,
+  caption={Portion of a manifest file for a controller node},
+  label={lst:manifest_controller},
+  ]
 node 'control.localdomain' {
   include ::openstack::role::controller
 }
 \end{lstlisting}
 
 \textit{Controller node:}
-\begin{lstlisting}[language=Ruby,numbers=none]
+\begin{lstlisting}[
+  language=Ruby,
+  numbers=none,
+  caption={Portion of a manifest file for a compute node},
+  label={lst:manifest_compute},
+  ]
 node 'storage.localdomain' {
   include ::openstack::role::storage
 }
