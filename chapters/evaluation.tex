@@ -114,35 +114,36 @@ Timings reported are dilated by the fact that compute nodes are started serially
 \label{sec:eval_cons}
 \newcommand{\allownewline}[2][c]{\begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
 
-architecure: 1 + 10\\
-host-describe -> vcpus: 18, memory\_mb: 24576, local\_gb: 3072\\
+This section presents the results of the experiments we carried out to evaluate the goodness of the consolidation algorithm proposed in section \ref{sec:cons_algs}.
 
-consolidation\_interval = 10\\
-no\_t=150\\
-create\_w=4\\
-delete\_w=1\\
-resize\_w=0\\
-nop\_w=20\\
+We run the \emph{same} $50$ simulations\footnote{We used the same $50$ different seeds in Oscard for each package of simulations (for an explanation of the role of random seeds in Oscard, see sub-section \ref{sub:oscard_internals}).} for each of the different consolidators on a ``1 + 10'' architecture deployed on a Dell PowerEdge T320 server (see \ref{sec:eval_adock}, for server's specifications.). Each simulation was composed of $150$ steps (\texttt{no\_t}=$150$) and each of the $10$ compute nodes was equipped with $18$ vCPUs, $24576$ MB of RAM and $3072$ GB of disk.
+Each simulation was configured with a \textit{NOP} operation weight of 20 (\texttt{nop\_w}=$20$); create operation weight of $4$ (\texttt{create\_w}=$4$); destroy operation weight of $1$ (\texttt{delete\_w}=$1$) and resize operation weight of $0$ (\texttt{resize\_w}=$0$)\footnote{We had to remove resize operations from the simulations due to a known bug (see \url{https://bugs.launchpad.net/nova/+bug/1430057}) which involves Nova's \code{FakeDriver}, live-migration and resize operation. The bug is tagged as ``invalid'' because ``[\ldots] This is just beyond scope of the current fake driver [\ldots]''. However, we think that the lack of resize operations doesn't compromise simulation results. It's create and destroy operations which are the real building blocks of a cloud system.}. Every consolidator was configured with a consolidation interval of $10$ seconds (\texttt{consolidation\_interval}=$10$), which we think is unfeasible in a real cloud system. However, we set it according to the time that Nova's \code{FakeDriver} requires us to create and destroy an instance. This time is much lower than the time that would take \code{LibvirtDriver} to accomplish the same operation. \code{FakeDriver}, in fact, only has to create an object and store it in the database. \code{LibvirtDriver}, instead, spawns a real virtual machine. The consolidation interval used was thought to make consolidators highly influence simulation results. A simulation of $150$ steps takes about $13$ minutes to run, thus executing an operation approximately every $5$ seconds. So, we have that the consolidator takes decisions about instance location approximately every $2$ operations executed on the system. In this way consolidators act as soon as possible to ``repair'' the system, highly influencing its status.
 
-0-49: vanilla\\
-50-99: random -> migration\_percentage=20\\
-100-149: GA ->\\
-    prob\_mutation=0.8\\
-    mutation\_perc=10\\
-    selection=roulette\\
-    fitness=\#nodes\\
-    elitism\_perc=20\\
-    population\_size=500\\
-    epoch\_limit=100\\
-150-199: GA -> best=True\\
-200-249: Holistic\\
+We report here configurations for each of the consolidator used (for a reference of the options see \ref{sec:cons_algs}).
 
-no\_create: 26.8,\\
-no\_destroy: 5.84,\\
-no\_nop: 117.36,\\
-no\_sims: 50\\
+\begin{description}
+  \item[Vanilla] No configuration required.
+  \item[Random] \texttt{migration\_percentage}=$20$
+  \item[Genetic Algorithm] \hfill \\
+    \begin{itemize}
+      \item \texttt{prob\_mutation}=$0.8$
+      \item \texttt{mutation\_perc}=$10$
+      \item \texttt{selection\_algorithm}=\code{nova.consolidator.ga.functions.RouletteSelection}
+      \item \texttt{fitness\_function}=\code{nova.consolidator.ga.functions.NoNodesFitnessFunction}
+      \item \texttt{elitism\_perc}=$20$
+      \item \texttt{population\_size}=$500$
+      \item \texttt{epoch\_limit}=$100$
+    \end{itemize}
+  \item[Genetic Algorithm (``best'' variant)]
+    \begin{itemize}
+      \item \texttt{prob\_mutation}=$0.8$
+      \item \texttt{mutation\_perc}=$10$
+      \item \texttt{best}=$True$
+    \end{itemize}
+  \item[Holistic Algorithm] No configuration required.
+\end{description}
 
-numbers are truncated at 3 decimal digits.
+Results are shown in table \ref{tab:cons_vs}\footnote{Results are truncated at the third decimal digit.}.
 
 \begin{table}[H]
 \centering
@@ -156,18 +157,36 @@ numbers are truncated at 3 decimal digits.
   \textbf{BusyCmpsSD} & 
   \allownewline[t]{\textbf{DsTime}\\[0pt]\textbf{[\%]}} \\
   \hline
-  vanilla & 22.918 & 34.638 & 2.505 & 7.753 & 2.905 & 0 \\
+  \emph{vanilla} & 22.918 & 34.638 & 2.505 & 7.753 & 2.905 & 0 \\
   \hline
-  random & 26.861 & 40.247 & 2.937 & 6.617 & 2.499 & 8.306 \\
+  \emph{random} & 26.861 & 40.247 & 2.937 & 6.617 & 2.499 & 8.306 \\
   \hline
-  ga & 31.413 & 46.759 & 3.440 & 5.367 & 2.560 & 9.186 \\
+  \emph{ga} & 31.413 & 46.759 & 3.440 & 5.367 & 2.560 & 9.186 \\
   \hline
-  ga\_best & 37.217 & 54.638 & 4.038 & 4.864 & 2.370 & 10.573 \\
+  \emph{ga\_best} & 37.217 & 54.638 & 4.038 & 4.864 & 2.370 & 10.573 \\
   \hline
-  holistic & 30.598 & 45.811 & 3.371 & 6.143 & 2.356 & 8.826 \\
+  \emph{holistic} & 30.598 & 45.811 & 3.371 & 6.143 & 2.356 & 8.826 \\
   \hline
   \end{tabular}
   \vspace{2mm}
   \caption{Results of $50$ simulations run on each type of consolidator.}
   \label{tab:cons_vs}
 \end{table}
+
+The first column is for the consolidator used; the second, third and fourth column for the percentage of vCPUs, RAM and disk used respectively\footnote{Ratios are calculated only on nodes that have a vCPUs usage greater than $0$ (almost the same as saying, ``nodes that host at least one instance'').}; the fifth column is for the number of compute nodes active (out of $10$); the sixth for the standard deviation of the active nodes and, eventually, the seventh for maximum downscale time\footnote{All of the values shown are an average on the $50$ simulations of the interested consolidator.}.
+
+First five columns are clear in their intent, while we explain the role of the last two ones.
+
+\textit{BusyCmpsSD} is the standard deviation of the number of active compute nodes. We report it to compare how stable consolidators are in maintaining the configuration obtained. Keep in mind that it makes sense only to compare this results among consolidators given that they were subject to the same simulations; the number by itself doesn't say anything about the consolidator itself, because the number of active compute nodes oscillates because of create operations too.
+
+\textit{DsTime} is the maximum downscale time. We calculate it examining each step of a simulation. If the number of active compute nodes decreases from a step to another, then a downscale window is started. The window is considered closed once the number of active compute nodes increases. The window is not activated if the decreasing is caused by a destroy operation. Given that destroy operation effect id discarded, downscale can only be caused by the consolidator's effect. \textit{DsTime} is the average on all simulation of the \emph{maximum} downscale window detected in ratio with the total number of steps (in our case, $150$). This means that, if we obtain a \textit{DsTime} of $10$, the consolidator considered succeeded in getting a downscale for, at maximum, the $10$ percent of the steps in a simulation, and so, ``15'' steps. ``Vanilla'' configuration, obviously, gets a \textit{DsTime} of $0$.
+
+With the weights on operations described above we obtained a mean number of create operations of $26.8$; $5.84$ destroy operation and $117.36$ \textit{NOP} operations.
+
+All of the consolidators brought to an improvement in all metrics examined compared to ``vanilla'' configuration. The number of active compute nodes decreased, while resource usage increased significantly. The standard deviation of the number of compute nodes decreased, meaning that consolidators succeed in making the system more stable. Maximum downscale time, as already said, increased considerably.
+
+If we compare consolidators among them, then ``ga\_best'' configuration is the one which gives best results on almost all metrics. It is a bit surprising to discover that it gives much better results than standard ``ga'' configuration. Standard ``ga'', in fact, is based on evolution as a standard genetic algorithm suggests. ``Best'' variant is \emph{not} a genetic algorithm indeed. The core of the algorithm itself is only based on the randomness of the generation of chromosomes and to influence mutation turning it into a non-random one. Mutation Chromosomes to be mutated are chosen according to roulette selection and genes to be mutated are chosen as a random sample of chromosome's genes, both in the standard algorithm and in ``best'' variant. It is surprising that, \emph{discarding evolution in its entirety}, it is enough to move an instance chosen at random to the busiest feasible node (see subsection \ref{sub:algs_ga}), instead that to a random one to bring to such a high improvement (about $5$ percent on vCPUs usage; about $8$ percent on RAM usage and about $1$ node active less). Another surprising fact is the comparison between ``best'' variant and holistic algorithm. Holistic algorithm does almost what ``best'' variant does when moving instances, but it is very far from the improvement given by it (it is even worse than standard genetic algorithm). It is surprising that even random algorithm brings to such a big improvement with respect to ``vanilla'' configuration (about $4$ percent on vCPUs usage; about $6$ percent on RAM usage and about $1$ node active less). It could be that ``vanilla'' OpenStack, with all its default configurations, is so terrible at virtual machine placement that there is no way to make the situation worse. In OpenStack, by default, once an instance has to be placed (on creation, for example) the service \texttt{nova-scheduler} is invoked. The scheduler returns a list of nodes that can host the instance based on policies which can be configured and customized by the administrator of the system. Given that the scheduler returns a list of possible hosts, a node has to be chosen. The host is chosen according to its \emph{weight}. Weighers are configurable and customizable in turn, but, by default, their behavior is to prefer spread against stacking\footnote{\url{http://docs.openstack.org/developer/nova/devref/filter\_scheduler.html}}. This behavior is totally in contrast with virtual machine consolidation.
+
+Another consideration about standard genetic algorithm is a non-functional one: algorithm performance. Genetic algorithms have always to deal with performance problems. This is especially the case given that our code is written in python. Genetic algorithm was implemented avoiding object oriented programming and preferring built-in data structures such as lists, dictionaries and tuples; preferring built-in functions (such as \code{map}, \code{reduce}, \code{filter} and \code{zip}) and list, dictionary and tuple comprehensions to \code{for} loops. Even if this decisions give a speed-up to genetic algorithm performance, the algorithm is slow, with an average of $5$ seconds run even when it is the case of about $20$ instances in the system (the average of instances during each simulation). The computational time could explode in case of hundreds of instances in the system. This fact has to be kept in mind by the system administrator when using this consolidator. ``Best'' variant is not effected so much by this problem because of its limiting in epoch run ($1$ instead of $100$ by standard configuration).
+
+``Best'' variant of genetic algorithm is the best at standard metrics (vCPUs, RAM and disk usage and number of active compute nodes)and the one that guarantees the highest maximum downscale time (about $10$ percent), but holistic algorithm is the most stable one (lowest number of active compute nodes standard deviation) even if it is very very close to ``best'' variant (only $0.014$ percent of difference).
