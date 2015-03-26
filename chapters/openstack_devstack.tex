@@ -52,6 +52,11 @@ However \texttt{nova-network} is still supported by OpenStack and in powerful en
 \label{par:openstack_nova_sched}
 \texttt{Nova} uses the \texttt{nova-scheduler} service to determine how to dispatch compute requests. It is used, for example, to determine on which host a Virtual Machine should launch. The system administrator can modify and configure the \code{/etc/nova/nova.conf} configuration file to adjust the criteria under which the \texttt{nova-scheduler} will place the Virtual Machines. The process of placing Virtual Machines on the most suitable host is divided in a \textit{filtering} step, in which a list of candidate hosts is generated, and a \textit{weighing} step in which the list is ordered according to the selected criteria and the best host is chosen.
 
+\subsection{Fake Drivers}
+\label{sec:openstack_fake_drivers}
+To deal with situations in which the compute nodes are not physical machines that will host real Virtual Machines, but they have be ``fake'' in the sense that they don't host a real hypervisor, OpenStack offers a module called \code{nova.virt.fake} that allows developers, that don't have real hardware, to test \code{Nova} code on compute nodes without a real hypervisor such as \textit{libvirt}. When exploiting this solution Virtual Machines, are mere python objects; in such a way the Virtual Machines are not really spawned but simply stored in the database. However \code{FakeDriver} mimics the correct behavior of a real hypervisor, allowing one to test the rest of the \code{Nova} running flow.\\
+This module is not configurable and by default a \code{FakeDriver} offers 1000 VCUs, 800000 MB of RAM, and 600000 GB of Hard Disk. 
+
 \section{DevStack}
 \label{sec:devstack}
  
