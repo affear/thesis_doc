@@ -54,7 +54,7 @@ However \texttt{nova-network} is still supported by OpenStack and in powerful en
 
 \subsection{Fake Drivers}
 \label{sec:openstack_fake_drivers}
-To deal with situations in which the compute nodes are not physical machines that will host real Virtual Machines, but they have be ``fake'' in the sense that they don't host a real hypervisor, OpenStack offers a module called \code{nova.virt.fake} that allows developers, that don't have real hardware, to test \code{Nova} code on compute nodes without a real hypervisor such as \textit{libvirt}. When exploiting this solution Virtual Machines, are mere python objects; in such a way the Virtual Machines are not really spawned but simply stored in the database. However \code{FakeDriver} mimics the correct behavior of a real hypervisor, allowing one to test the rest of the \code{Nova} running flow.\\
+To deal with situations in which the compute nodes are not physical machines that will host real Virtual Machines, but they have to be ``fake'' in the sense that they don't host a real hypervisor, OpenStack offers a module called \code{nova.virt.fake} that allows developers, that don't have real hardware, to test \code{Nova} code on compute nodes without a real hypervisor such as \textit{libvirt}. When exploiting this solution Virtual Machines, are mere python objects; in such a way the Virtual Machines are not really spawned but simply stored in the database. However \code{FakeDriver} mimics the correct behavior of a real hypervisor, allowing one to test the rest of the \code{Nova} running flow.\\
 This module is not configurable and by default a \code{FakeDriver} offers 1000 VCUs, 800000 MB of RAM, and 600000 GB of Hard Disk. 
 
 \section{DevStack}
