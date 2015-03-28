@@ -4,7 +4,7 @@
 %%--------------------------------------------------------------------------
 
 
-In this chapter we are going to present OpenStack and DevStack; we shall provide a brief overview and focus on the components and aspects that most concern the topics of our thesis.
+In this chapter we are going to present OpenStack and DevStack; we shall provide a brief overview and focus on the components and aspects that most concern the topics of our thesis to provide the reader with some key informations useful to the understanding of following chapters.
 
 \section{OpenStack}
 \label{sec:openstack}
@@ -63,7 +63,8 @@ This module is not configurable and by default a \code{FakeDriver} offers 1000 V
 DevStack\footnote{More info at \url{docs.openstack.org/developer/devstack}} is a set of scripts and utilities to quickly deploy an OpenStack cloud environment and it is freely available on GitHub\footnote{\url{github.com/openstack-dev/devstack}}.\\
 DevStack allows developers and system administrators to automate the process of installing OpenStack on a server reducing it to a simple command for every installation.\\
 The services that are configured by default are Identity (\texttt{Keystone}), Object Storage (\texttt{Swift}), Image Storage (\texttt{Glance}), Block Storage (\texttt{Cinder}), Compute (\texttt{Nova}), Network (\texttt{Nova}), Dashboard (\texttt{Horizon}) and Orchestration (\texttt{Heat}).
-The main script is \code{stack.sh}; all the required configurations, such as the Git repositories to use, the services to enable or the OS images to use, can be achieved overriding default environment variables (found in \code{stackrc}) through file \code{local.conf}. This is achieved with a \code{localrc} section, as shown below:
+The main script is \code{stack.sh}; it does all the works, installing and configuring all the services set by the user.\\
+All the required configurations, such as the Git repositories to use, the services to enable or the OS images to use, can be achieved overriding default environment variables (found in \code{stackrc}) through file \code{local.conf}. This is achieved with a \code{localrc} section, as shown below:
 \begin{lstlisting}[numbers=none,label={lst:devstack_local_conf}]
 [[local|localrc]]
 ADMIN_PASSWORD=secrete
@@ -76,4 +77,5 @@ ENABLED_SERVICES=n-cpu,n-api,n-net
 # ...
 \end{lstlisting}
 The environment variable \code{ENABLED\_SERVICES} is used to define the service to run: in listing \ref{lst:devstack_local_conf} the \texttt{Nova} services to install, in a simple compute node installation, are \texttt{nova-compute}, \texttt{nova-api}, \texttt{nova-network}.
-By running the script \code{tools/install\_prereqs.sh} it is furthermore possible to install all the dependencies required by the configured services.\\Other useful scripts provided by DevStack are \code{unstack.sh}, that allows to stop everything that was started by \code{stack.sh}, and \code{clean.sh} that tries to remove all the traces left by the OpenStack installation performed by DevStack.
+By running the script \code{tools/install\_prereqs.sh} it is furthermore possible to install all the dependencies required by the configured services.\\
+Other useful scripts provided by DevStack are \code{unstack.sh}, that allows to stop everything that was started by \code{stack.sh}, and \code{clean.sh} that tries to remove all the traces left by the OpenStack installation performed by DevStack.
