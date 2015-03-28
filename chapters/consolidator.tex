@@ -2,6 +2,7 @@
 %%--------------------------------------------------------------------------
 %% NOVA CONSOLIDATOR
 %%--------------------------------------------------------------------------
+
 OpenStack already performs virtual machine placement. This is accomplished thanks to its \texttt{nova-scheduler} service. Once a virtual machine is created (or, in certain cases, resized or live migrated) the scheduler decides which of the available compute nodes can host\footnote{The policies by which a node can host or not a virtual machine are defined by the precise filter which scheduler has been equipped with.} the virtual machine (this phase is called \textit{filtering}) and then selects the best\footnote{Again, it depends on which weighter is used.} among them (this phase is called \textit{weighting}).
 
 OpenStack \emph{doesn't} perform virtual machine consolidation. Each of the operations on virtual machines are issued by the user that owns them (or by \texttt{Heat} for him/her).
