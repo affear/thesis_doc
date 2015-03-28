@@ -26,36 +26,41 @@
 \label{sec:adock_intro}
 The lack of a uniform and standardized test environment for cloud systems brought us to develop aDock.\\
 aDock is a suite of tools that lets the final user deploy a complete OpenStack system; run simulations against it; collect output data and view results on a friendly user interface.\\
-We chose OpenStack as cloud computing software platform, because of its open-source nature and because of its continuous evolution with the aim of keeping up with the last cloud standards.\\
-Our intended users are OpenStack developers who need to run their code in a fully functional environment and researchers who want to try their algorithm on a complete cloud system to test out its behavior.
+We chose OpenStack as our reference cloud computing software platform, because it is open-source and because it is continuously evolving to keep up with the latest cloud standards.\\
+Our intended users are OpenStack developers who need to run their code in a fully functional environment, and researchers who want to try their algorithms (e.g. about virtual machine placement or consolidation) on a complete cloud system to test out their behavior.
 
 \section{Requirements}
 \label{sec:adock_reqs}
-In this section, we will identify both functional and non-functional requirements for aDock.
+In this section, we will identify both the functional and non-functional requirements for aDock. Functional requirements (see subsection \ref{sub:func_req}) lead us to define the general architecture of the system proposed, aDock, which we show in figure \ref{fig:adock_high_arch} (see subsection \ref{sub:adock_modules}). Non-functional requirements lead us to precise choices in technologies used to develop the system (see subsection \ref{sub:nonfunc_req}).
 
 \subsection{Functional Requirements}
 \label{sub:func_req}
 
 \paragraph{FR1}\label{p:fr1} \emph{aDock should provide tools to deploy a complete environment.} \hfill \\
-A user should be able to start and update OpenStack's nodes with a single command. aDock should provide the user with an abstraction of a server called ``node''. The ``node'', in its depth, is an Ubuntu based Docker container, shipped with OpenStack services dependencies. A user should be able to decide which services will be installed and started on each node and their internal configuration using a configuration file.
-\subparagraph{Solution} FakeStack (see section \ref{sec:fakestack}) is the aDock module which provides the user with the specified tools. Starting a node is as easy as \code{\$ run\_node}. A node can be configured by means of a simple configuration file. Nodes are of two types, \textit{controllers} and \textit{computes}. Controller nodes are different from compute ones because they are shipped with \textit{MySQL} and \textit{RabbitMQ} installations.
+A user should be able to start and update OpenStack's nodes with a single command and to decide which services will be installed and started on each node and their internal configuration using a configuration file.
 
 \paragraph{FR2}\label{p:fr2} \emph{aDock should provide a tool to run simulations.} \hfill \\
-If the user puts his/her code into OpenStack he/she probably aims at running simulations and examine the new piece of code behavior in interacting with the entire system. Simulations should be configurable according to the user needs and repeatable.
-\subparagraph{Solution} Oscard (see section \ref{sec:oscard}) is the aDock module which takes care of running repeatable and configurable simulations against an OpenStack system.
+If the user puts his/her code into OpenStack he/she probably will need to run simulations and examine how the new piece of code behaviors in interacting within the rest of the system. Simulations should be configurable according to the user needs and repeatable.
 
-\paragraph{FR3}\label{p:fr3} \emph{aDock should persistently store simulations output.} \hfill \\
-Once a simulation has been run, it could be interesting to store the outputs of it in terms of generic metrics about the system, such as the average of the number of compute nodes active during the simulation, the average of virtual CPUs used and so on.
-\subparagraph{Solution} Oscard, by default, stores the aggregates of a simulation into a Firebase\footnote{\url{https://www.firebase.com/}} backend. In our case, the backend is called Bifrost (see section \ref{sec:others}).
+\paragraph{FR3}\label{p:fr3} \emph{aDock should persistently store the simulations' output.} \hfill \\
+Once a simulation has been run, it could be interesting to store its outputs in terms of generic metrics about the system, such as the average number of compute nodes active during the simulation, the average number of virtual CPUs used, and so on.
 
-\paragraph{FR4}\label{p:fr4} \emph{aDock should provide a user interface} \hfill \\
-Although Firebase provides an interactive user interface, data is displayed in a \textit{JSON} fashion and it is, therefore, not easily understandable and browseable. Simulations results should be displayed to user in a friendly manner, using charts to give the user a glimpse of the current situation. Data representation should be given in real-time.
-\subparagraph{Solution} Polyphemus (see section \ref{sec:others}) is the aDock module which takes care of displaying to the user real-time simulation results in a friendly manner.
+\paragraph{FR4}\label{p:fr4} \emph{aDock should provide a user interface.} \hfill \\
+Simulation results should be displayed to the user in a friendly manner, using charts to give the user a glimpse of the current situation. Data representation should also be given in real-time.
 
-\paragraph{}\label{p:adock_archi} aDock turns out to be a modular system where each component is configurable and has a precise purpose. FakeStack is employed to start nodes; Oscard runs simulations and collects aggregates on Bifrost; Polyphemus is the eye on the data that shows the user the results obtained.
+\subsection{aDock Modules}
+\label{sub:adock_modules}
+
+FakeStack (see section \ref{sec:fakestack}) is the aDock module which provides the user with the tools specified in requirement $1$ (see paragraph \ref{p:fr1}). FakeStack provides the concept of ``node'' which, in its depth, is an Ubuntu based Docker container, shipped with OpenStack services dependencies. Starting a node is as easy as \code{\$ run\_node}. A node can be configured by means of a simple configuration file. Nodes are of two types, \textit{controllers} and \textit{computes}. Controller nodes are different from compute ones because they are shipped with \textit{MySQL} and \textit{RabbitMQ} installations.
+
+Oscard (see section \ref{sec:oscard}) is the simulation tool that satisfies requirement $1$ and $2$ (see paragraphs \ref{p:fr2} and \ref{p:fr3}). Oscard is the aDock module which takes care of running repeatable and configurable simulations against an OpenStack system and to store outputs persistently. This module, by default, stores the aggregates of a simulation into a Firebase\footnote{\url{https://www.firebase.com/}} backend. In our case, the backend is called Bifrost (see section \ref{sec:others}).
+
+Although Firebase provides an interactive user interface, data is displayed as \textit{JSON} and is, therefore, not easily understandable and browseable. Polyphemus (see section \ref{sec:others}) is the aDock module that takes care of displaying real-time simulation results in a friendly manner satisfying requirement $4$ (see paragraph \ref{p:fr4}).
+
+aDock is a modular system where each component is configurable and has a precise purpose. FakeStack is employed to start nodes; Oscard runs simulations and collects aggregates on Bifrost; Polyphemus is the eye on the data that shows the user the obtained results.
 In figure~\ref{fig:adock_high_arch} we highlight the general architecture of aDock.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/adock_high_arch.png}}
 \label{fig:adock_high_arch}
 \caption{aDock high level architecture}
@@ -63,12 +68,12 @@ In figure~\ref{fig:adock_high_arch} we highlight the general architecture of aDo
 
 \subsection{Non-Functional Requirements}
 \label{sub:nonfunc_req}
-As opposed to functional requirements, aDock has very strong non-functional requirements in order to give a suitable testing environment to our stakeholders. In general we take leverage of Docker and DevStack and use their biggest strength. Docker gives us high speed in running containers and sandboxing by construction and makes aDock cross-platform; while DevStack gives us great flexibility and configurability for what concerns OpenStack services.
+aDock also has very strong non-functional requirements, to give a suitable testing environment to our stakeholders. In general we take leverage of Docker and DevStack and use their biggest strength. Docker gives us i) high speeds in running containers, ii) sandboxing by construction, and iii) makes aDock cross-platform. DevStack gives us great flexibility and configurability for what concerns OpenStack services.
 
-\paragraph{NFR1}\label{p:nfr1} \emph{Users should be able to choose which code is running in OpenStack.} \hfill \\
-Before booting the entire system the user should be able to choose if he/she wants to run OpenStack code from a precise code repository which is, in general, the better and more supported way to version and share code among developers and even physical machines. Speaking in Git\footnote{\url{http://git-scm.com/}} terms, a user could choose to run the most up to date code (which may be buggy) and so get the code from branch \code{master}, or maybe get a much more stable OpenStack version and get the code from branch \code{stable/juno}. The most interesting fact (and this is the scenario we have in our mind) is that the user could choose to fork an OpenStack service and see his/her code running onto nodes.
+\paragraph{NFR1}\label{p:nfr1} \emph{Users should be able to choose which OpenStack's code version is running.} \hfill \\
+Before booting the entire system the user should be able to choose if he/she wants to run OpenStack code from a precise code repository which is, in general, the better way to version and share code amongst developers. Speaking in Git\footnote{\url{http://git-scm.com/}} terms, a user could choose to run the most up to date code (which may be buggy) and so get the code from branch \code{master}, or maybe get a much more stable OpenStack version and get the code from branch \code{stable/juno}. The most interesting fact (and this is the scenario we have in our mind) is that the user could choose to fork an OpenStack service and see his/her code running nodes.
 
-\subparagraph{Solution} All of this is achievable thanks to DevStack, which installs OpenStack services cloning repositories from GitHub and running \code{python setup.py install}. By default, DevStack clones official OpenStack repositories from branch \code{master}, but it is possible to specify different repository URLs and branches for each of the OpenStack services by means of \code{local.conf} files.
+\subparagraph{Solution} All of this is achievable thanks to DevStack, which installs OpenStack services by cloning repositories from GitHub and running \code{python setup.py install}. By default, DevStack clones official OpenStack repositories from branch \code{master}, but it is possible to specify different repository URLs and branches for each of the OpenStack services by means of \code{local.conf} files.
 
 \paragraph{NFR2}\label{p:nfr2} \emph{aDock should be lightweight.} \hfill \\
 Users often need to test algorithms that, by design, target the management and/or optimization of tens of physical servers. Since we can assume that not everyone will have that amount of resources, we believe that aDock should be as light-weight as possible. It should be possible to run aDock on limited hardware, potentially even on one's personal laptop. It is under this assumption that sandboxing becomes important; indeed, the experimentation environment should not have any sort of repercussions on the user's machine; we want the user to be able to build and tear down the environment with no consequences.
@@ -78,7 +83,7 @@ Users often need to test algorithms that, by design, target the management and/o
 \paragraph{NFR3}\label{p:nfr3} \emph{The experimentation environment should be highly configurable.} \hfill \\
 Our primary goal with aDock is to provide a fast and easy way to create the experimentation environment. We believe that building a system which allows users to design the overall architecture of the cloud system is out of scope of this thesis, mainly because of the intrinsic high complexity and vastness of OpenStack's system itself. Up to now, as a proof of concept, we will focus on ``1 + N'' architecture, with $1$ controller node and $N$ compute nodes.
 
-\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure OpenStack in all its aspects through \code{local.conf} file. Each service can be configured in each of DevStack installation phases. Each service, during installation, passes through \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra} phases\footnote{\url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring a service is as simple as adding few lines to \code{local.conf} file:
+\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure all aspects of OpenStack through its \code{local.conf} file. Each service can be configured in each of DevStack's installation phases. Each service, during installation, passes through \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra} phases\footnote{\url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring a service is as simple as adding few lines to \code{local.conf} file:
 
 \begin{lstlisting}[title=Adding per-service configuration to DevStack's local.conf file]
 ... # DevStack configurations
@@ -106,23 +111,23 @@ It is of paramount importance that users be able to compare their results with b
 
 \section{FakeStack}
 \label{sec:fakestack}
-FakeStack\footnote{\url{https://github.com/affear/fakestack}} is the aDock module which allows the user to manage \textit{nodes}, which are the building blocks of an OpenStack system. Nodes are of two types: \textit{controllers} and \textit{computes}\footnote{In FakeStack, compute nodes, by default, are equipped with \code{nova.virt.fake.Fakedriver}. Thus, FakeStack compute nodes don't host a real hypervisor such as \textit{Libvirt}. Virtual machines, in FakeStack, are mere python objects. This fact, doesn't influence user's choices. A user, in fact, can equip FakeStack's compute nodes with \code{nova.virt.libvirt.driver.LibvirtDriver} as long as he/she satisfies its dependencies (this brings to editing \texttt{Dockerfile} and rebuild node's image).}. Both of them are Ubuntu-based Docker containers shipped with pre-installed software that satisfies most\footnote{main services as \textit{Nova}, \textit{Keystone}, \textit{Glance} are actually supported.} of OpenStack's services dependencies. Both controller and compute nodes are configurable by means of simple configuration files ~\ref{sub:fakestack_conf}.\\
+FakeStack\footnote{\url{https://github.com/affear/fakestack}} is the aDock module that allows the user to manage \textit{nodes}, the building blocks of an OpenStack system. Nodes are of two types: \textit{controllers} and \textit{computes}\footnote{In FakeStack, compute nodes, by default, are equipped with \code{nova.virt.fake.Fakedriver}. Thus, FakeStack compute nodes don't host a real hypervisor such as \textit{Libvirt}. Virtual machines, in FakeStack, are mere python objects. This fact, doesn't influence user's choices. A user, in fact, can equip FakeStack's compute nodes with \code{nova.virt.libvirt.driver.LibvirtDriver} as long as he/she satisfies its dependencies (this brings to editing \texttt{Dockerfile} and rebuild node's image).}. Both of them are Ubuntu-based Docker containers shipped with pre-installed software that satisfies most\footnote{main services as \textit{Nova}, \textit{Keystone}, \textit{Glance} are actually supported.} of OpenStack's services dependencies. Both controller and compute nodes are configurable by means of simple configuration files ~\ref{sub:fakestack_conf}.\\
 FakeStack provides a set of scripts to handle node startup, service updating on live nodes and other features~\ref{sub:fakestack_scripts}.
 
 \subsection{Nodes}
 \label{sub:fakestack_nodes}
 As already anticipated in requirement~\ref{p:nfr3}, we will focus on ``1 + N'' architectures. This architecture is characterized by $1$ controller node that handles $N$ compute nodes.\\
-The main difference between a controller and a compute node is the presence, in the first one, of database (in our case, \textit{MySQL}) and message broker (in our case, \textit{RabbitMQ}) services, compulsory for OpenStack's controller nodes.
+The main difference between a controller and a compute node is that the former contains a database (in our case, \textit{MySQL}) and a message broker (in our case, \textit{RabbitMQ}); both are compulsory for OpenStack's controller nodes.
 
 To understand how FakeStack really works, it is useful to examine its internal structure:
 
-\begin{figure}[!ht]
-\centering{\includegraphics{images/fakestack_tree.png}}
+\begin{figure}[H]
+\centering{\includegraphics[height=9cm]{images/fakestack_tree.png}}
 \label{fig:fakestack_tree}
 \caption{FakeStack's file structure}
 \end{figure}
 
-As we can see in figure~\ref{fig:fakestack_tree}, nodes have two separated \texttt{Dockerfile}s (which makes them two different Docker containers), but they share a set of scripts contained in \texttt{shared} folder:
+As we can see in figure~\ref{fig:fakestack_tree}, nodes have two separated \texttt{Dockerfile}s (which makes them two different Docker containers), but they share a set of scripts (contained in the \texttt{shared} folder):
 
 \begin{description}
 	\item[cmd.sh] This is the script that will be run when the container starts (\code{docker run}). In algorithm~\ref{alg:cmd.sh} we explain its behavior in terms of pseudo-code.
@@ -150,23 +155,23 @@ As we can see in figure~\ref{fig:fakestack_tree}, nodes have two separated \text
 	
 	\item[reinstall\_service.sh] This script allows the user to update a service on this node specifing its name (e.g. \texttt{nova}, \texttt{glance} and so on)
 
-	\item[update\_quotas.sh] This script allows the user to enlarge \textit{quotas} for the \textit{tenant}\footnote{\textit{Quotas} are limits on how much CPU, memory and disk space the tenant can use. \textit{Tenant} is an OpenStack concept similar to Linux groups.} in use (in our case \texttt{admin}) to a very big amount. Its usage is justified by the fact that probably the user will spawn hundreds or thousands of virtual machines on its OpenStack nodes and, normally, standard quotas will prevent him from doing so. Enlarging quotas is an easy and fast way to allow the user not to worry about how many virtual machines he owns.
+	\item[update\_quotas.sh] This script allows the user to enlarge \textit{quotas} for the \textit{tenant}\footnote{\textit{Quotas} are limits on how much CPU, memory and disk space the tenant can use. \textit{Tenant} is an OpenStack concept similar to Linux groups.} in use (in our case \texttt{admin}) to a very big amount. Its usage is justified by the fact that the user will probably spawn hundreds or thousands of virtual machines on his/her OpenStack nodes, and that, normally, standard quotas will prevent him from doing so. Enlarging quotas is an easy and fast way to allow the user not to worry about how many virtual machines he owns.
 \end{description}
 
-Once a node has been built, all of this shared scripts are copied to the file-system of the node.\\
-\texttt{local.conf} file, instead, is bound\footnote{\texttt{local.conf} is a \href{https://docs.docker.com/userguide/dockervolumes/\#data-volumes}{\textit{Data Volume}}. Basically it is a file whose modifications are visible at each container's run.} to node's file-system avoiding rebuilding at each modification.
+Once a node has been built, all of the shared scripts are copied to the file-system of the node.\\
+When building a container, in fact, we specify in \texttt{Dockerfile} which files have to be copied into container's file system. The files specified are copied at build-time and subsequent changes on user's file system will not result in a modification at container's file system. \textit{Data Volume}\footnote{\url{https://docs.docker.com/userguide/dockervolumes/\#data-volumes}} is a feature of Docker's that allows modifications on files to be immediately applied to container's file system. \texttt{local.conf} file \emph{is} a \textit{Data Volume}, thus it is ``bound'' to the node's file-system, in order to avoid rebuilding at each modification.
 
-When a node is started, \texttt{cmd.sh} will run, resulting in running DevStack's \texttt{stack.sh}. At this very moment OpenStack's installation starts~\ref{} \todo{reference to DevStack's detailed description}.
+When a node is started, \texttt{cmd.sh} will run, which in turn will run DevStack's \texttt{stack.sh} (see section \ref{sec:devstack}). At that point OpenStack's installation starts.
 
 \subsection{Scripts}
 \label{sub:fakestack_scripts}
-Once a user enters FakeStack root directory he/she has to \code{source fakerc}. Executing this command, all of the scripts contained in \texttt{scripts} directory become available in \texttt{PATH}. The prefix \texttt{ftools\_} is added to avoid conflicts in names.\\
-Scripts for running and updating nodes takes leverage of Linux screens\footnote{\url{http://linux.die.net/man/1/screen}}. Screens are powerful tools to run detached shells from within another shell. This feature gives lots of advantages both in terms of ease of use and in running long running jobs via SSH.\\
-All of aDock processing is confined into two different screens, \texttt{running} and \texttt{updating}. Thanks to this, the user will not be obliged to open lots of shells, but he could use only one; keep it clean from computation and reattach to aDock screens once needed. If the user wants to run a long running task (e.g. a very long simulation or lots of different, small simulations) on a remote server via SSH, he will not need to keep the SSH session opened and wait for simulations to end; the screen session, in fact, will stay open (and so the processes within it, running) indipendently from SSH connection. 
+Once a user enters FakeStack's root directory he/she has to perform \code{source fakerc}. Executing this command all of the scripts contained in the \texttt{scripts} directory become available in \texttt{PATH}. The prefix \texttt{ftools\_} is added to avoid conflicts in names.\\
+Scripts for running and updating nodes leverage Linux screens\footnote{\url{http://linux.die.net/man/1/screen}}. Screens is a powerful tool to run detached shells from within another shell. This feature gives lots of advantages both in terms of ease of use and in running long running jobs via SSH.\\
+All of aDock processing is confined into two different screens, \texttt{running} and \texttt{updating}. Thanks to this, the user will not have to open lots of shells, but focus on using only one; keeping it clean from computation and reattaching to aDock screens when needed. If the user wants to run a long running task (e.g. a very long simulation or lots of different, small simulations) on a remote server via SSH, he will not need to keep the SSH session open and wait for simulations to end; the screen session, in fact, will stay open (and so the processes within it, running) independently from the SSH connection. 
 
-We list here and describe scripts contained into \texttt{scripts} directory.
+We now list and describe the scripts contained in the \texttt{scripts} directory.
 \begin{description}
-	\item[createbr] Input: bridge name. Creates a bridge with CIDR $42.42.0.0/24$ named as the bridge name passed as first argument by the user. This bridge is intended to be used by Docker, setting the option \code{-b <bridge\_name>} into \texttt{/etc/default/docker}. Run this script before starting the system or edit IP configuration in \texttt{cmd.sh}. In fact, \texttt{cmd.sh} will set controller's IP to the last available into that precise network ($42.42.255.254$). After running this script, Docker service has to be restarted.
+	\item[createbr] Input: bridge name. Creates a bridge with CIDR $42.42.0.0/24$; it takes the name passed as first argument by the user. This bridge is intended to be used by Docker, setting the option \code{-b <bridge\_name>} into \texttt{/etc/default/docker}. Run this script before starting the system or editing the IP configuration in \texttt{cmd.sh}. In fact, \texttt{cmd.sh} will set the controller's IP to the last IP available in that precise network ($42.42.255.254$). After running this script, Docker service has to be restarted.
 	\item[destroyall] Stops and destroys all OpenStack nodes.
 	\item[runctrl] Runs one controller node on a new window in screen \texttt{running}.
 	\item[runcmps] Input: \texttt{N}. Starts \texttt{N} compute nodes concurrently\footnote{They are started as Docker daemons (\code{-d} option in Docker).}. A new window (\texttt{cmps}) in screen \texttt{running} is created asking for operation confirmation. Once the opration is confirmed, nodes are started and a new window (\texttt{samplecmp}), attached to one of the compute nodes, is opened to show the user a sample node behavior and progress in OpenStack installation.
@@ -174,10 +179,10 @@ We list here and describe scripts contained into \texttt{scripts} directory.
 	\item[updateall] Input: service name. Updates the service given by the user on all OpenStack nodes. All of the processing is performed into screen \texttt{updating}.
 \end{description}
 
-We list here and describe scripts ``sourced'' from \texttt{fakerc} (\texttt{ftools\_} convention is always maintained).
+We will now list and describe the scripts ``sourced'' by \texttt{fakerc} (\texttt{ftools\_} convention is always maintained).
 \begin{description}
 	\item[runcmp] Alias for \code{ftools\_runcmps 1}.
-	\item[build] Input: \texttt{ctrl} or \texttt{cmp}. This script builds the node, and so, regenerates it from a pure Ubuntu image. It is necessary to run this script only in case that some of the files (apart from \texttt{local.conf}) has been modified.
+	\item[build] Input: \texttt{ctrl} or \texttt{cmp}. This script builds the node; regenerating it from a pure Ubuntu image. It is necessary to run this script only in case some of the files (apart from \texttt{local.conf}) have been modified.
 	\item[attach] Input: container ID. Attaches to a Docker container. Alias for \code{docker attach <container\_id>}.
 \end{description}
 
@@ -185,7 +190,7 @@ We list here and describe scripts ``sourced'' from \texttt{fakerc} (\texttt{ftoo
 \label{sub:fakestack_conf}
 \todo{repair listings placement!}
 
-Fakestack takes leverage of the powerful configurable options of DevStack. Modifying \texttt{local.conf} files before starting a node, it is possible to change enabled services (see listing~\ref{lst:enabled_services}) and their internal configuration (see listing~\ref{lst:driver_conf}). Every service is configurable in each of its installation \textit{phases}. Configuring it is as simple as adding a \code{[[ <phase> | <config-file-name> ]]} line (e.g. \code{[[post-config|\$GLANCE\_CONF]]}) to \texttt{local.conf} file and add configuration options below. DevStack's service installation phases are \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra}\footnote{For more information see \url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}.\\
+Fakestack leverages the powerful configurable options of DevStack. Modifying \texttt{local.conf} files before starting a node, it is possible to change the enabled services (see listing~\ref{lst:enabled_services}) and their internal configuration (see listing~\ref{lst:driver_conf}). Every service is configurable in each of its installation \textit{phases}, which are, for DevStack, \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra}\footnote{For more information see \url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring it is as simple as adding a \code{[[ <phase> | <config-file-name> ]]} line (e.g. \code{[[post-config|\$GLANCE\_CONF]]}) to \texttt{local.conf} file and add configuration options below.\\
 Most important, it is possible to choose a different Git repository and Git branch for each of OpenStack's services enabled (see listing~\ref{lst:change_repo}). DevStack, in fact, install services \textit{cloning} those repositories and running \code{python setup.py install}\footnote{\label{note:pypi}It is the standard way to install \textit{PyPI} packages. More information can be found at \url{https://wiki.python.org/moin/CheeseShopTutorial}}.\\
 Thanks to this important piece of configuration, a user can \textit{fork} an OpenStack project; develop its code and use its new forked repository URL in DevStack's configuration.\\
 In listing~\ref{lst:localconf_ex} we show a possible complete example of \texttt{local.conf} file for a compute node.
@@ -256,7 +261,7 @@ compute_driver=nova.virt.fake.MyFakeDriver
 \subsection{Example}
 \label{sub:fakestack_ex}
 In this section we provide an example on how to use FakeStack in a pseudo-code fashion.\\
-Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's commands and standard input to handle Linux screens. It refers to a user that wants to launch a ``1 + 5'' architecture from scratch. In this case we suppose that the user will start a ``vanilla'' OpenStack version and so he/she doesn't need to modify configuration files.
+Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's commands and standard input to handle Linux screens. It refers to a user that wants to launch a ``1 + 5'' architecture from scratch. In this case we suppose that the user will start a ``vanilla'' OpenStack version, and so he/she doesn't need to modify any configuration files.
 
 \begin{algorithm}[H]
 \caption{Launching a ``1 + 5'' architecture with aDock}
@@ -293,31 +298,31 @@ Procedure~\ref{alg:example} is comprehensive of real bash commands, aDock's comm
 
 \section{Oscard}
 \label{sec:oscard}
-Oscard\footnote{\url{https://github.com/affear/oscard}} is the aDock module which takes care of running simulations against one or more OpenStack systems and collect data output from them. Oscard has two principal components, a server and a client one (see \ref{sub:oscard_internals}). The two components don't need to be used on the same machine. It is for these reason that Oscard's dockerized version runs only the server part and waits for requests from the client.
+Oscard\footnote{\url{https://github.com/affear/oscard}} is the aDock module that takes care of running simulations against one or more OpenStack systems and collecting their data outputs. Oscard has two main components, a server and a client (see \ref{sub:oscard_internals}). The two components don't need to be used on the same machine. This is why Oscard's dockerized version only runs the server part and waits for requests from the client.
 
-The client part is the one that actually runs simulations. A user can configure a simulation in terms of number of steps, command weights and more and run it using the script provided.
+The client part is the one that defines simulation running behavior. The user is supposed to use the client to actually start simulations by means of an executable file (\code{\$ ./bin/run\_sim}).
 
-The server part is the \textit{Proxy}, it litterally waits for client requests and forwards them to OpenStack's controller node.
+The server part is the \textit{Proxy}, it literally waits for client requests and forwards them to OpenStack's controller node and stores simulation's outputs into Bifrost (see section \ref{sub:bifrost}).
 
-Oscard is completely configurable from \texttt{oscard.conf} file.
+Oscard is completely configurable from the \texttt{oscard.conf} file.
 
 \subsection{Modules}
 \label{sub:oscard_modules}
-Oscard is composed of few modules (see figure \ref{fig:oscard_tree}), in this section we will explain in detail what each of them is up to.
+Oscard is composed of few modules (see figure \ref{fig:oscard_tree}); in this section we will explain in detail what each of them is up to.
 
-\begin{figure}[!ht]
-\centering{\includegraphics{images/oscard_tree.png}}
+\begin{figure}[H]
+\centering{\includegraphics[height=8cm]{images/oscard_tree.png}}
 \label{fig:oscard_tree}
 \caption{Oscard's file structure}
 \end{figure}
 
 \begin{description}
 	\item[oscard.sim.api] This module contains the APIs to interact with OpenStack's Nova.
-	It mainly contains two classes, \code{NovaAPI} and \code{FakeAPI}. \code{NovaAPI} provides methods necessary to perform basic operations on Nova using OpenStack's official python clients: \code{keystoneclient.v2\_0} and \code{novaclient.v1\_1}.
+	It contains two classes, \code{NovaAPI} and \code{FakeAPI}. \code{NovaAPI} provides the methods necessary to perform basic operations on Nova using OpenStack's official python clients: \code{keystoneclient.v2\_0} and \code{novaclient.v1\_1}.
 
 		\begin{itemize}
-			\item \code{init}: resets APIs random seed. If the option \texttt{random\_seed} has been modified into \texttt{oscard.conf}, the new seed will be reloaded as well.
-			\item \code{architecture}: Returns system's architecture in terms of compute nodes and their resources (vCPUs, memory and disk).
+			\item \code{init}: resets APIs random seed. If the option \texttt{random\_seed} has been modified in \texttt{oscard.conf}, the new seed will be reloaded as well.
+			\item \code{architecture}: Returns the system's architecture in terms of compute nodes and their resources (vCPUs, memory and disk).
 			\item \code{active\_services}: Returns active service and their number. For instance, if there are $10$ compute nodes, it is very common to have $10$ \texttt{nova-compute} services up. In this case, only one \texttt{nova-compute} service with count $10$ will be returned.
 			\item \code{snapshot}: Returns a snapshot of the system. The snapshot contains data about each compute node in use (a node which is hosting virtual machines), such as resources in use, and aggregate data about all active nodes (averages of resources usage). 
 			\item \code{create}: Spawns an instance of random flavor and returns its ID.
@@ -326,8 +331,8 @@ Oscard is composed of few modules (see figure \ref{fig:oscard_tree}), in this se
 		\end{itemize}
 
 	\code{FakeAPI} class, mimics \code{NovaAPI}'s behavior but it doesn't involve an OpenStack controller. It was developed only for testing purpose.
-	\item[oscard.sim.collector] This module exposes \code{BifrostAPI} class, which gives the APIs to interact with the Firebase backend for data storage. An instance of it is obtained in \code{oscard.sim.run} module and it is used to store the data obtained during the simulation.
-	\item[oscard.sim.proxy] This module contains the API to communicate with the proxy, \code{ProxyAPI}. The class, basically, mirrors every method contained in \code{oscard.sim.api.NovaAPI}. A \code{NovaAPI} object is obtained at module startup and each of the calls to proxy's methods is \textit{delegated} to it. It is this module that, if run from module \code{\_\_main\_\_}, starts a WSGI server (powered by Bottle\footnote{\url{http://bottlepy.org/docs/dev/index.html}}) and waits for GET and POST requests.
+	\item[oscard.sim.collector] This module exposes the \code{BifrostAPI} class; this API gives a way to interact with the Firebase backend for data storage. An instance of \code{BifrostAPI} is obtained in the \code{oscard.sim.run} module, and is used to store the data obtained during the simulation.
+	\item[oscard.sim.proxy] This module contains the API to communicate with the proxy (\code{ProxyAPI}). The class basically mirrors the methods contained in \code{oscard.sim.api.NovaAPI}. A \code{NovaAPI} object is obtained when the module is started, to which calls are \textit{delegated}. It is this module that, if run from module \code{\_\_main\_\_}, starts a WSGI server (powered by Bottle\footnote{\url{http://bottlepy.org/docs/dev/index.html}}) and waits for GET and POST requests.
 	\item[oscard.randomizer] This module is a wrapper for python's \code{random} module. It provides \code{get\_randomizer} function which returns a new \code{random.Random} object initialized with the same seed as specified in \texttt{oscard.conf}.
 \end{description}
 
@@ -335,17 +340,17 @@ Oscard is composed of few modules (see figure \ref{fig:oscard_tree}), in this se
 \label{sub:oscard_internals}
 \newcommand{\osconf}[1]{\footnote{In \texttt{oscard.conf}: \texttt{#1}}}
 
-In this section we will describe in detail Oscard internal working and its possible configuration options (specified in footnotes, when necessary). We will also clarify some of the concepts (such as pseudo-randomness) about simulations.
+In this section we will describe how Oscard internal works, and how it can be configured. We will also clarify how we use pseudo-randomness within simulations.
 
-Each random-taken decision in Oscard is taken using a randomizer obtained through \code{oscard.randomizer.get\_randomizer}. Each time we get a randomizer, it is initialized with a seed taken by configuration file\osconf{random\_seed} or, in case it is not specified, directly from Bifrost's last simulation ID. The seed used is equivalent to the simulation ID that the user wants to execute. It is for this reason that every random-taken decision can be repeatable simply setting the seed from configuration file.
+Each randomized decision in Oscard is taken using a randomizer obtained through \code{oscard.randomizer.get\_randomizer}. Each time we get a randomizer, it is initialized with a seed taken from a configuration file\osconf{random\_seed} or, in case one is not specified, directly from Bifrost's last simulation ID (The seed used is equivalent to the simulation ID that the user wants to execute). It is for this reason that every randomized decision can be repeated simply setting the seed in the configuration file.
 
-Every simulation is composed of a precise number of commands\osconf{no\_t} run in sequence. Each command is executed at a precise step which is a discrete instant in time. Available commands (up to now) are \textit{create}, \textit{resize}, \textit{destroy} and \textit{NOP}. First three commands are clear in their intent, the last one, \textit{NOP} command, is a ``no operation'' command. It is meant to make simulations more realistic in the sense that, in reality, it is impossible that at each time instant the system is asked to perform a CRD\footnote{Create Resize Destroy} operation. \textit{NOP} operation simulates the fact that the system could be idle (in term of requests from users) in some moments. ``No operation''s allow us to change operation \textit{density} along time.
+Every simulation is composed of a precise number of commands\osconf{no\_t} run in sequence. Each command is executed at a precise step which is a discrete instant in time. Currently available commands are \textit{create}, \textit{resize}, \textit{destroy} and \textit{NOP}. The first three commands are clear in their intent; the last one, i.e. the \textit{NOP} command, is a ``no operation'' command. It is meant to make simulations more realistic in the sense that, in reality, it is impossible that at each time instant the system is asked to perform a CRD\footnote{Create Resize Destroy} operation. \textit{NOP} operation simulates the fact that the system could be idle (in term of requests from users) in some moments. ``No operation''s allow us to change operation \textit{density} along time.
 
-At each step, Oscard chooses a command at random and executes it. Commands can have different weights\osconf{<command-name>\_w} that influence their probability to be chosen. Each command is executed \textit{when and only when} the command before has been completed (with success or not), thus, the state of the machine interested in the operation, can be one of \texttt{ACTIVE} or \texttt{ERROR}\footnote{Two of possible instance states in OpenStack. See \url{http://docs.openstack.org/developer/nova/devref/vmstates.html}} and not an intermediate one. Because of this reason and because Oscard is single-threaded, we can say that Oscard's simulations are run \textit{serially}. This fact is important, because in conjunction with pseudo-randomness, it ensures \textit{simulation repeatability}. At least, for what concerns Oscard itself: the system, in fact, is built to run repeatable simulations, but we cannot guarantee that OpenStack system will always take the same decisions. Thus, two simulation outputs could be different even if simulations are, for Oscard, the same one.
+At each step, Oscard chooses a command at random and executes it. Commands can have different weights\osconf{<command-name>\_w} that influence their probability to be chosen. Each command is executed \textit{when and only when} the command before has been completed (either successfully or not); thus, the state of the machine that is interested in the operation, can be one of \texttt{ACTIVE} or \texttt{ERROR}\footnote{Two of possible instance states in OpenStack. See \url{http://docs.openstack.org/developer/nova/devref/vmstates.html}.}. Because of this reason, and because Oscard is single-threaded, we can say that Oscard's simulations are run \textit{serially}. This fact is important, because in conjunction with pseudo-randomness, it ensures \textit{simulation repeatability}. Repeatability is ensured for what concerns Oscard itself. It could be, in fact, that the same simulation brings to different results not because of Oscard's decisions, but because of OpenStack's internal behavior. \emph{Simulation repeatability} has to be interpreted inside Oscard; thus, commands executed in two simulations with the same seed will be equal and equally executed. However, we cannot state that their execution will bring OpenStack to the very same internal status. It could be, for example, that the same create operation ends successfully or not. This fact has to be attributed to OpenStack and \emph{not} to Oscard itself. OpenStack, in fact, is a very vast system and we are not supposed to control its behavior directly from Oscard. In other words, we can ensure, as \textit{Guidelines for Evaluating and Expressing the Uncertainty of NIST Measurement Results} states, to meet repeatability conditions: ``the same experimental tools''; ``the same observer''; ``the same measuring instrument, used under the same conditions''; ``the same location''; ``repetition over a short period of time'' and the ``same objectives''. We \emph{cannot} guarantee that the experiment (i.e. the simulation) is repeatable in its strictly scientific meaning\footnote{http://en.wikipedia.org/wiki/Repeatability}.
 
 As already said, Oscard is composed of two parts, the server and the client one. Oscard's proxy (the server part) can be run both as a Docker container or running \code{./bin/run\_proxy} from a shell\footnote{Dockerized version is recommended, because it allows the user not to install all Oscard's dependencies before running}. Oscard, as FakeStack, has a source file called \texttt{oscardrc}. Once the user runs \code{source oscardrc}, \code{run\_oscard} script is available in \texttt{PATH}, this script can be used to start Oscard's container.
 
-Oscard is highly configurable, but it is important to note that each option has a default value (see \url{https://github.com/affear/oscard/blob/master/oscard.sample.conf}). So, it is not needed to configure each Oscard option before starting it. Some options are relevant only for server, others for client and some for both of them. We list their meaning and split them between the two Oscard components to better understand their working.
+Oscard is highly configurable, but it is important to note that each option has a default value (see \url{https://github.com/affear/oscard/blob/master/oscard.sample.conf}). Some options are relevant only for server, others for client and some for both. We list their meaning and split them between the two Oscard components to better understand them.
 
 The server part can be configured in terms of:
 \begin{itemize}
@@ -366,13 +371,10 @@ The client part can be configured in terms of:
 	\item \texttt{proxy\_hosts}: the URLs for the proxies on which the simulation will be run concurrently (e.g. \texttt{host1.example.com:3000,host2.example.com:80}). Oscard, in fact, can run the same simulation concurrently on more than one host (if real-time comparisons are needed).
 \end{itemize}
 
-As an example of Oscard functioning, we show in figure~\ref{fig:oscard_functioning}, by means of a sequence diagram, the workflow of a \texttt{create} operation. 
+Figure~\ref{fig:oscard_functioning} shows Oscard functioning. In particular it reports a sequence diagram that illustrates the workflow of a \texttt{create} operation. 
 
-\todo{sequence diagram of create op}
-
-% sequence diagram
-\begin{figure}[!ht]
-\centering{\includegraphics{images/oscard_functioning.png}}
+\begin{figure}[H]
+\centering{\includegraphics[width=\textwidth]{images/create_seq.png}}
 \label{fig:oscard_functioning}
 \caption{Workflow for a \texttt{create} operation}
 \end{figure}
@@ -383,13 +385,13 @@ As an example of Oscard functioning, we show in figure~\ref{fig:oscard_functioni
 
 \section{Other Components}
 \label{sec:others}
-The last two components of aDock take care of its database and view. These two roles are covered respectively by Bifrost and Polyphemus.
+The last two components of aDock take care of its backend database and view. These two roles are covered respectively by Bifrost and Polyphemus.
 
 \subsection{Bifrost}
 \label{sub:bifrost}
-Bifrost\footnote{\url{https://bifrost.firebaseio.com/}} is the name for the Firebase application delegated to store simulation data output. Firebase uses a non-relational JSON database. The whole aDock database is thus a JSON structure that is exportable in a \texttt{.json} file. Firebase provides a JavaScript and a python SDK and it natively supports real-time notifications on data change (only for JavaScript SDK). We decided to use this backend type because of its SDKs; for the portability of \texttt{.json} format; for the advantages of dealing with a non-relational database when data is very mutable (especially while developing); because performance is not needed in our case and because of its cloud nature. It is important that Firebase, by design, doesn't offer a great support for concurrent calls\footnote{\url{https://www.firebase.com/docs/web/guide/saving-data.html\#section-transactions}}, so, our simulations \textit{cannot} run concurrently\footnote{The same simulation can be run concurrently on more hosts, but two simulations cannot be run concurrently on different hosts.}.
+Bifrost\footnote{\url{https://bifrost.firebaseio.com/}} is the name for the Firebase application that we use to store simulation data output. Firebase uses a non-relational JSON database. The whole aDock database is thus a JSON structure that is exportable in a \texttt{.json} file. Firebase provides a JavaScript and a python SDK and it natively supports real-time notifications on data change (only for JavaScript SDK). We decided to use this backend type because of its SDKs; for the portability of \texttt{.json} format; for the advantages of dealing with a non-relational database when data is very mutable (especially while developing); because performance is not needed in our case and because of its reliability being a cloud service. It is important to say that Firebase, by design, offers support for concurrent calls\footnote{\url{https://www.firebase.com/docs/web/guide/saving-data.html\#section-transactions}}. However, we interact with Firebase's APIs (in Oscard's \code{BifrostAPI}) using a python library which doesn't support them\footnote{\url{http://ozgur.github.io/python-firebase/}}. This is the reason why our simulations \emph{cannot} run concurrently; i.e. the \emph{same} simulation can run concurrently on more hosts (no problem, Oscard supports it), but \emph{two different} simulations cannot run concurrently (on different hosts).
 
-Firebase offers a good dashboard (see \ref{fig:firebase_dash}) that updates in real-time (if the amount of data is not too big) and allows the user to perform CRUD\footnote{Create Read Update Delete} operations on data. 
+Firebase offers a dashboard (see figure \ref{fig:firebase_dash}) that is updated in real-time and allows the user to perform CRUD\footnote{Create Read Update Delete} operations on data. 
 
 \begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/firebase_dash.png}}
@@ -399,7 +401,7 @@ Firebase offers a good dashboard (see \ref{fig:firebase_dash}) that updates in r
 
 \subsection{Polyphemus}
 \label{sub:polyphemus}
-Polyphems\footnote{\url{https://github.com/affear/polyphemus}} is the Polymer\footnote{\url{https://www.polymer-project.org/0.5/}}-powered view of aDock. It can be run in a Docker container or not\footnote{Dockerized version is recommended, because it allows the user not to install all Polyphemus' dependencies such as \texttt{NodeJS} before running}. Its aim is to show data to the user in a friendly way. Polyphemus shows each simulation snapshot in terms of overall average of resources usage\footnote{The average of the percentage of vCPUs, memory and disk used calculated on all active compute nodes (nodes that are hosting at least one instance).} through line charts and percentage of resources usage\footnote{The percentage of vCPUs, memory and disk.} for each compute node through bar charts. A tool-bar representing data aggregates\footnote{The average of all averages of resources usage calculated on the number of simulation steps executed.} for each host is always visible on the top. It shows charts for each of the hosts on which the current simulation is running, giving the possibility to make comparisons intuitively. Moreover it includes more information such as the architecture of each OpenStack system running on each host; active services and simulation progress.
+Polyphems\footnote{\url{https://github.com/affear/polyphemus}} is the Polymer\footnote{\url{https://www.polymer-project.org/0.5/}}-powered view of aDock. It can be run in a Docker container or not\footnote{Dockerized version is recommended, because it allows the user not to install all Polyphemus' dependencies such as \texttt{NodeJS} before running}. Its aim is to show data to the user in a friendly way. Polyphemus shows each simulation snapshot in terms of overall average resource usage\footnote{The average of the percentage of vCPUs, memory and disk used calculated on all active compute nodes (nodes that are hosting at least one instance).} (through line charts) and percentages of resource usage\footnote{The percentage of vCPUs, memory and disk.} for each compute node (through bar charts). A tool-bar representing data aggregates\footnote{The average of all averages of resource usage calculated on the number of simulation steps executed.} for each host is always visible on the top. It shows charts for each of the hosts on which the current simulation is running, giving the possibility to intuitively make comparisons. Moreover it includes more information such as the architecture of each OpenStack system running on each host; active services and simulation progress.
 
 Every information displayed by Polyphemus is updated in \textit{real-time}. In figure \ref{fig:poly}, we provide a sample screen shot of Polyphemus. 
 
@@ -413,10 +415,10 @@ Every information displayed by Polyphemus is updated in \textit{real-time}. In f
 \label{sec:adock_arch}
 aDock is a modular system, where each component is run in its dockerized version\footnote{Apart from Bifrost.}. In figure \ref{fig:adock_arch}, a sample aDock architecture is shown.
 
-The simulation is started from a normal laptop using Oscard. Oscard client contacts Oscard proxies on each of the hosts (specified in \texttt{proxy\_hosts}) using the endpoints exposed, each endpoint identifies a different command to be executed. For each host, Oscard proxy uses \code{NovaAPI} to ``send'' the command to controller node (whose IP is specified in \texttt{ctrl\_host}) which, in turn, will handle it. For each host and at each step, the proxy collects data from the controller using \code{NovaAPI} methods and stores it into Bifrost using \code{BifrostAPI}. Data is available and can be consulted connecting to Polyphemus\footnote{Polyphemus container can be started everywhere, not only on one of the hosts.} using a web browser on user's laptop.  
+The simulation is started from a normal laptop using Oscard. The Oscard client contacts Oscard proxies on each of the hosts (specified in \texttt{proxy\_hosts}) using the exposed endpoints, each endpoint identifies a different command to be executed. For each host, Oscard proxy uses \code{NovaAPI} to ``send'' the command to controller node (whose IP is specified in \texttt{ctrl\_host}). For each host, and at each step, the proxy collects data from the controller using \code{NovaAPI} methods and stores them into Bifrost using \code{BifrostAPI}. Data is available and can be consulted connecting to Polyphemus\footnote{Polyphemus container can be started everywhere, not only on one of the hosts.} using a web browser on user's laptop.  
 
 \begin{figure}[H]
 \centering{\includegraphics[width=\textwidth]{images/adock_arch.png}}
 \label{fig:adock_arch}
-\caption{Screenshot of Polyphemus}
+\caption{aDock architecture}
 \end{figure}
