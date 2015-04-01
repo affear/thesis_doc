@@ -276,7 +276,6 @@ However from our point of view we are more interested in knowing how it behaves 
 
 \begin{itemize}
 \item \textit{Performance}: A single Virtual Machine generally need a remarkable amount of resources, especially to host an OpenStack installation; for this reason it is very unlikely that one will be able to run on a single machine the number of Virtual Machines needed to deploy a realistic multi-node installation of OpenStack. Once again ``all-in-one'' solution is not sufficiently realistic, especially when testing algorithms or portions of code that involve multiple nodes.
-\item \todo{think others\dots}
 \end{itemize}
 
 % ---------------------------------- CHEF ---------------------------------- %
@@ -299,7 +298,7 @@ Docker offers an online platform called Docker Hub\footnote{\url{hub.docker.com}
 \subsection{Dockenstack}
 \label{sub:sota_dockenstack}
 One of the first attempts to create a cloud test environment based on OpenStack and Docker is Dockenstack\footnote{\url{github.com/ewindisch/dockenstack}}. It is an independent and not actively supported project, but is a good starting point to show the potential derived from using Docker.\\
-The project is basically composed of a Dockerfile and a bunch of scripts that will setup and configure an OpenStack installation using DevStack (\todo{shall we talk about it in the intro?}) in a Docker container.\todo{cmd spiegare}\\
+The project is basically composed of a Dockerfile and a bunch of scripts that will setup and configure an OpenStack installation using DevStack in a Docker container.\\
 A pre-built image is available on Docker Hub, so with the command \code{docker run -privileged -t -i ewindisch/dockenstack} Docker will automatically download and run the container.\\
 This made it a good solution for beginners wanting to learn OpenStack, but inadequate for advanced experiments, such as experiments regarding Virtual Machine placement and server consolidation algorithms.
 
