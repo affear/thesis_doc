@@ -193,8 +193,10 @@ The algorithm is configurable in all of its aspects:
 \begin{description}
 	\item[prob\_mutation] (Defaults to $0.8$) The probability to apply mutation on a chromosome.
 	\item[mutation\_perc] (Defaults to $10$) The percentage of genes to be mutated in a chromosome, once mutation is decided to be applied.
-	\item[selection\_algorithm] (Defaults to \code{nova.consolidator.ga.functions.RouletteSelection}) The selection algorithm used. The selection algorithm plays its role when it's time to decide which chromosomes to cross (in our case, mutate) to generate a new child to add to the population (an implementation of tournament selection is provided in \code{nova.consolidator.ga.functions.TournamentSelection}).
-	\item[fitness\_function] (Defaults to \code{nova.consolidator.ga.functions.NoNodesFitnessFunction}) The Fitness function establishes how much the chromosome fits the desired solution (see listing \ref{lst:ga_fitness} for \code{NoNodesFitnessFunction} implementation).
+	\item[selection\_algorithm] \hfill \\
+	(Defaults to \code{nova.consolidator.ga.functions.RouletteSelection}) The selection algorithm used. The selection algorithm plays its role when it's time to decide which chromosomes to cross (in our case, mutate) to generate a new child to add to the population (an implementation of tournament selection is provided in \code{nova.consolidator.ga.functions.TournamentSelection}).
+	\item[fitness\_function] \hfill \\
+	(Defaults to \code{nova.consolidator.ga.functions.NoNodesFitnessFunction}) The Fitness function establishes how much the chromosome fits the desired solution (see listing \ref{lst:ga_fitness} for \code{NoNodesFitnessFunction} implementation).
 	\item[population\_size] (Defaults to $500$) The size of the population.
 	\item[epoch\_limit] (Defaults to $100$) The number of epochs after which the algorithm stops.
 	\item[elitism\_perc] (Defaults to $0$) The percentage of chromosomes that will pass to the next epoch. The number \texttt{N} of elite chromosomes is determined from this option and the \texttt{population\_size}. At each step the best \texttt{N} chromosomes (according to the fitness function used) will pass to the next epoch.

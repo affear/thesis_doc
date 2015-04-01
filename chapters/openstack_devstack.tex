@@ -65,7 +65,7 @@ DevStack allows developers and system administrators to automate the process of 
 The services that are configured by default are Identity (\texttt{Keystone}), Object Storage (\texttt{Swift}), Image Storage (\texttt{Glance}), Block Storage (\texttt{Cinder}), Compute (\texttt{Nova}), Network (\texttt{Nova}), Dashboard (\texttt{Horizon}) and Orchestration (\texttt{Heat}).
 The main script is \code{stack.sh}; it does all the works, installing and configuring all the services set by the user.\\
 All the required configurations, such as the Git repositories to use, the services to enable or the OS images to use, can be achieved overriding default environment variables (found in \code{stackrc}) through file \code{local.conf}. This is achieved with a \code{localrc} section, as shown below:
-\begin{lstlisting}[numbers=none,label={lst:devstack_local_conf}]
+\begin{lstlisting}[numbers=none,caption=Sample of a \texttt{local.conf},label={lst:devstack_local_conf}]
 [[local|localrc]]
 ADMIN_PASSWORD=secrete
 DATABASE_PASSWORD=$ADMIN_PASSWORD

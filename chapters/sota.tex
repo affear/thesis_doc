@@ -134,6 +134,8 @@ Vagrant\footnote{\url{www.vagrantup.com}} is a virtualization framework for crea
 Thanks to an online repository \footnote{\url{www.vagrantcloud.com}} it is possible to automatically download a Vagrant Box and run it with a single command: \code{vagrant up vagrant-box-name}.
 It is also possible to create and configure custom Vagrant Box by simply writing a \code{Vagrantfile}:
 \begin{lstlisting}[
+  float,
+  floatplacement=H,
   language=Ruby,
   numbers=none,
   caption={\texttt{Vagrantfile} example},
@@ -185,6 +187,7 @@ These configurations can be achieved with the help of Vagrant that will cover al
 
 \begin{lstlisting}[
   float,
+  floatplacement=H,
   language=Ruby,
   numbers=none,
   caption={Recipe to run an ``All-in-One'' configuration (\texttt{aio-nova.rb})},
@@ -203,7 +206,7 @@ machine 'controller' do
 
 Of course it is possible to setup a ``1 + N'' configuration using different \code{Vagrantfiles} to create and configure one VM for the Controller and N VMs for the Compute nodes. However it is unlikely to succeed in running a lot of VMs on the same host, especially if they contain a fully functional OpenStack installation, since a Virtual Machine typically requires a significant amount of resources to operate.
 
-\subparagraph{Pro and Cons}
+\subparagraph{Pros and Cons}
 \label{subp:sota_chef_pro_cons}
 
 Chef is a very powerful tool to create, manage and configure cloud environments, and it offers a lot of functionalities to structure the desired architecture. In combination with Vagrant can also be used to setup test environments for development or research purposes.\\
@@ -232,10 +235,11 @@ Puppet is structured in a master-slave architecture: the master serves the manif
 \label{subp:sota_puppet_openstack}
 
 As seen for Chef, Puppet can be very useful when dealing with OpenStack installation and maintenance. To configure and deploy an OpenStack infrastructure with the help of Puppet one can download appropriate \textit{modules} from Puppet Forge; this simplifies most of the operations such as OpenStack instances provisioning, configuration management and others.
-The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}}; using this module it is possible to deploy both a multi-node and an all-in-one installation. Compared to Chef, Puppet is a bit more flexible because it allows you to control more details about the OpenStack services that are to be installed on every node; for example, you can use the following instructions in the Puppet's manifest file of a node to achieve different results:
+The module is \code{puppetlabs-openstack}\footnote{\url{github.com/puppetlabs/puppetlabs-openstack}}; using this module it is possible to deploy both a multi-node and an all-in-one installation. Compared to Chef, Puppet is a bit more flexible because it allows you to control more details about the OpenStack services that are to be installed on every node; for example, you can use the following instructions in the Puppet's manifest file of a node to achieve different results. In listing \ref{lst:manifest_controller} we show a portion of a manifest file for a controller node, while in listing \ref{lst:manifest_compute} we show it for a compute node.
 
-\textit{Controller node:}
 \begin{lstlisting}[
+  float,
+  floatplacement=H,
   language=Ruby,
   numbers=none,
   caption={Portion of a manifest file for a controller node},
@@ -246,8 +250,9 @@ node 'control.localdomain' {
 }
 \end{lstlisting}
 
-\textit{Controller node:}
 \begin{lstlisting}[
+  float,
+  floatplacement=H,
   language=Ruby,
   numbers=none,
   caption={Portion of a manifest file for a compute node},
@@ -268,7 +273,7 @@ node /compute[0-9]+.localdomain/ {
 
 Obviously, it is possible to configure multiple nodes to run in multiple Virtual Machines that are configured and launched with Vagrant and deploy the various OpenStack components with \code{puppetlabs-openstack}. This solution, is clearly difficult to achieve on a machine with a limited amount of resources; however also on a more powerful server machine this solution it is slightly feasible and scalable.
 
-\subparagraph{Pro and Cons}
+\subparagraph{Pros and Cons}
 \label{subp:sota_puppet_pro_cons}
 Puppet is an extremely powerful and mature tools for automated cloud infrastructure deploying: it streamlines the entire process and automates every step of the software delivery process.\\
 However from our point of view we are more interested in knowing how it behaves when a single developer or a researcher needs to deploy a cloud infrastructure on a single machine with limited amounts of resources (a development workstation for example) and he/she has little sysadmin skills. With regard to this aspect Puppet used with Vagrant has some key limitations:
