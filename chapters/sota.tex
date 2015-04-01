@@ -211,7 +211,6 @@ However, with regard to this last aspect, it has several limitations:
 \begin{itemize}
 \item \textit{Performance}: because VMs are very resource greedy it is very difficult to achieve a ``1 + N'' configuration for development or research purpose on a single machine. On the other hand the ``All-in-One Compute'' solution that allows a full OpenStack installation on a single Virtual Machine is very simplistic and doesn't represent a real environment setting.
 \item \textit{Lack of customization}: at the state of the art all of the described solutions install both the Controller node and the Compute node with a predefined set of installed services (in practice all the OpenStack service excluded Object Storage, Metering, and Orchestration are installed) so it is not possible to setup the environment with more or less services or new ones. In our case, in fact, we need to be able to decide which OpenStack services to install (for example we don't install OpenStack Network as a Service module, \code{Neutron}), as well as to implement a new one and install it (see chapter \ref{chap:consolidator} regarding our Consolidator service).
-\item \todo{think others\dots}
 \end{itemize}
 
 
