@@ -79,14 +79,14 @@ Before booting the entire system the user should be able to choose if he/she wan
 \paragraph{NFR2}\label{p:nfr2} \emph{aDock should be lightweight.} \hfill \\
 Users often need to test algorithms that, by design, target the management and/or optimization of tens of physical servers. Since we can assume that not everyone will have that amount of resources, we believe that aDock should be as light-weight as possible. It should be possible to run aDock on limited hardware, potentially even on one's personal laptop. It is under this assumption that sandboxing becomes important; indeed, the experimentation environment should not have any sort of repercussions on the user's machine; we want the user to be able to build and tear down the environment with no consequences.
 
-\subparagraph{Solution} Docker is a virtualization system which relies on Docker containers which are much more lightweight than virtual machines\footnote{From Docker: ``Containers boot 1000x faster than virtual machines; their disk and memory footprint are also much lower; and they work on virtually all current platforms'' (see \url{https://www.docker.com/company/careers/?gh_jid=47837}).}\footnote{\url{http://devops.com/blogs/devops-toolbox/docker-vs-vms/}} \todo{are those refs authoritative?}. Docker gives us, by construction, speed and lightness.
+\subparagraph{Solution} Docker is a virtualization system which relies on Docker containers which are much more lightweight than virtual machines\footnote{From Docker: ``Containers boot 1000x faster than virtual machines; their disk and memory footprint are also much lower; and they work on virtually all current platforms'' (see \url{https://www.docker.com/company/careers/?gh_jid=47837}).}\footnote{\url{http://devops.com/blogs/devops-toolbox/docker-vs-vms/}}. Docker gives us, by construction, speed and lightness.
 
 \paragraph{NFR3}\label{p:nfr3} \emph{The experimentation environment should be highly configurable.} \hfill \\
 Our primary goal with aDock is to provide a fast and easy way to create the experimentation environment. We believe that building a system which allows users to design the overall architecture of the cloud system is out of scope of this thesis, mainly because of the intrinsic high complexity and vastness of OpenStack's system itself. Up to now, as a proof of concept, we will focus on ``1 + N'' architecture, with $1$ controller node and $N$ compute nodes.
 
-\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure all aspects of OpenStack through its \code{local.conf} file. Each service can be configured in each of DevStack's installation phases. Each service, during installation, passes through \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra} phases\footnote{\url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring a service is as simple as adding few lines to \code{local.conf} file:
+\subparagraph{Solution} The possibility to configure the system still remains in configuring OpenStack services in terms of their internal behavior. This is achieved, again, thanks to DevStack, which allows us to configure all aspects of OpenStack through its \code{local.conf} file. Each service can be configured in each of DevStack's installation phases. Each service, during installation, passes through \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra} phases\footnote{\url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring a service is as simple as adding few lines to \code{local.conf} file as shown in listing \ref{lst:conf_service} on page \pageref{lst:conf_service}.
 
-\begin{lstlisting}[title=Adding per-service configuration to DevStack's local.conf file]
+\begin{lstlisting}[float,caption=Adding per-service configuration to DevStack's local.conf file,label={lst:conf_service}]
 ... # DevStack configurations
 
 [[post-config|\$NOVA-CONF]]
@@ -189,14 +189,13 @@ We will now list and describe the scripts ``sourced'' by \texttt{fakerc} (\textt
 
 \subsection{Configuration}
 \label{sub:fakestack_conf}
-\todo{repair listings placement!}
 
 Fakestack leverages the powerful configurable options of DevStack. Modifying \texttt{local.conf} files before starting a node, it is possible to change the enabled services (see listing~\ref{lst:enabled_services}) and their internal configuration (see listing~\ref{lst:driver_conf}). Every service is configurable in each of its installation \textit{phases}, which are, for DevStack, \textbf{local}, \textbf{pre-install}, \textbf{install}, \textbf{post-config}, \textbf{extra}\footnote{For more information see \url{http://docs.openstack.org/developer/devstack/configuration.html\#local-conf}}. Configuring it is as simple as adding a \code{[[ <phase> | <config-file-name> ]]} line (e.g. \code{[[post-config|\$GLANCE\_CONF]]}) to \texttt{local.conf} file and add configuration options below.\\
 Most important, it is possible to choose a different Git repository and Git branch for each of OpenStack's services enabled (see listing~\ref{lst:change_repo}). DevStack, in fact, install services \textit{cloning} those repositories and running \code{python setup.py install}\footnote{\label{note:pypi}It is the standard way to install \textit{PyPI} packages. More information can be found at \url{https://wiki.python.org/moin/CheeseShopTutorial}}.\\
 Thanks to this important piece of configuration, a user can \textit{fork} an OpenStack project; develop its code and use its new forked repository URL in DevStack's configuration.\\
 In listing~\ref{lst:localconf_ex} we show a possible complete example of \texttt{local.conf} file for a compute node.
 
-\begin{lstlisting}[floatplacement=H, caption={Choose OpenStack's enabled services}, label={lst:enabled_services}, numbers=none]
+\begin{lstlisting}[float, floatplacement=H, caption={Choose OpenStack's enabled services}, label={lst:enabled_services}, numbers=none]
 ... # Other configuration options
 
 # Enables:
@@ -208,7 +207,7 @@ ENABLED_SERVICES=n-cpu,n-api,n-net
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[floatplacement=H, caption={Internal configuration of Nova}, label={lst:driver_conf}, numbers=none]
+\begin{lstlisting}[float, floatplacement=H, caption={Internal configuration of Nova}, label={lst:driver_conf}, numbers=none]
 ... # Other configuration options
 
 [[post-config|$NOVA_CONF]]
@@ -218,7 +217,7 @@ compute_driver=nova.virt.fake.MyFakeDriver
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[floatplacement=H, caption={Change repository URL}, label={lst:change_repo}, numbers=none]
+\begin{lstlisting}[float, floatplacement=H, caption={Change repository URL}, label={lst:change_repo}, numbers=none]
 ... # Other configuration options
 
 NOVA_REPO=https://github.com/me/nova.git
@@ -227,7 +226,7 @@ NOVA_BRANCH=my-branch
 ... # Other configuration options
 \end{lstlisting}
 
-\begin{lstlisting}[floatplacement=H, caption={Complete \texttt{local.conf} example for compute node}, label={lst:localconf_ex}]
+\begin{lstlisting}[float, floatplacement=H, caption={Complete \texttt{local.conf} example for compute node}, label={lst:localconf_ex}]
 [[local|localrc]]
 FLAT_INTERFACE=eth0
 MULTI_HOST=1
